@@ -23,7 +23,7 @@ Example Invocations
 - `drop()`
 - `set(field, 1)`
 
-#### Invocation paramaters
+#### Invocation parameters
 
 The TQL will use reflection to determine parameter types when parsing an invocation within a statement.
 

@@ -226,6 +226,22 @@ func Test_NewFunctionCall(t *testing.T) {
 					{
 						Bool: (*Boolean)(tqltest.Boolp(true)),
 					},
+					{
+						Bytes: (*Bytes)(&[]byte{1, 2, 3, 4, 5, 6, 7, 8}),
+					},
+					{
+						Enum: (*EnumSymbol)(tqltest.Strp("TEST_ENUM")),
+					},
+					{
+						Invocation: &Invocation{
+							Function: "testing_string",
+							Arguments: []Value{
+								{
+									String: tqltest.Strp("test"),
+								},
+							},
+						},
+					},
 				},
 			},
 		},
