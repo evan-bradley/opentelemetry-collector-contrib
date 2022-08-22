@@ -30,6 +30,7 @@ type MetricTransformContext struct {
 	Metrics              pmetric.MetricSlice
 	InstrumentationScope pcommon.InstrumentationScope
 	Resource             pcommon.Resource
+	ProcessorContext     tql.ProcessorContext
 }
 
 func (ctx MetricTransformContext) GetItem() interface{} {
@@ -50,6 +51,10 @@ func (ctx MetricTransformContext) GetMetric() pmetric.Metric {
 
 func (ctx MetricTransformContext) GetMetrics() pmetric.MetricSlice {
 	return ctx.Metrics
+}
+
+func (ctx MetricTransformContext) GetProcessorContext() tql.ProcessorContext {
+	return ctx.ProcessorContext
 }
 
 var symbolTable = map[tql.EnumSymbol]tql.Enum{

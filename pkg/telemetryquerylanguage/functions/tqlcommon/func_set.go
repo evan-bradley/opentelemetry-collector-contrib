@@ -24,6 +24,9 @@ func Set(target tql.Setter, value tql.Getter) (tql.ExprFunc, error) {
 		if val != nil {
 			target.Set(ctx, val)
 		}
+
+		ctx.GetProcessorContext().GetLogger().Warn("Value is nil, leaving unmodified")
+
 		return nil
 	}, nil
 }

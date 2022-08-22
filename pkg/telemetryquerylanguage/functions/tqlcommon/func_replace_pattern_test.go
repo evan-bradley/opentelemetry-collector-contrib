@@ -75,9 +75,10 @@ func Test_replacePattern(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			scenarioValue := pcommon.NewValueString(input.StringVal())
 
-			ctx := tqltest.TestTransformContext{
-				Item: scenarioValue,
-			}
+			ctx := tqltest.NewTestTransformContext(
+				t,
+				scenarioValue,
+			)
 
 			exprFunc, _ := ReplacePattern(tt.target, tt.pattern, tt.replacement)
 			exprFunc(ctx)
@@ -92,9 +93,10 @@ func Test_replacePattern(t *testing.T) {
 
 func Test_replacePattern_bad_input(t *testing.T) {
 	input := pcommon.NewValueInt(1)
-	ctx := tqltest.TestTransformContext{
-		Item: input,
-	}
+	ctx := tqltest.NewTestTransformContext(
+		t,
+		input,
+	)
 
 	target := &tql.StandardGetSetter{
 		Getter: func(ctx tql.TransformContext) interface{} {
@@ -113,9 +115,10 @@ func Test_replacePattern_bad_input(t *testing.T) {
 }
 
 func Test_replacePattern_get_nil(t *testing.T) {
-	ctx := tqltest.TestTransformContext{
-		Item: nil,
-	}
+	ctx := tqltest.NewTestTransformContext(
+		t,
+		nil,
+	)
 
 	target := &tql.StandardGetSetter{
 		Getter: func(ctx tql.TransformContext) interface{} {

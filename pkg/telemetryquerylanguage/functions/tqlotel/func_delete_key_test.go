@@ -79,9 +79,10 @@ func Test_deleteKey(t *testing.T) {
 			scenarioMap := pcommon.NewMap()
 			input.CopyTo(scenarioMap)
 
-			ctx := tqltest.TestTransformContext{
-				Item: scenarioMap,
-			}
+			ctx := tqltest.NewTestTransformContext(
+				t,
+				scenarioMap,
+			)
 
 			exprFunc, _ := DeleteKey(tt.target, tt.key)
 			exprFunc(ctx)
@@ -96,9 +97,10 @@ func Test_deleteKey(t *testing.T) {
 
 func Test_deleteKey_bad_input(t *testing.T) {
 	input := pcommon.NewValueString("not a map")
-	ctx := tqltest.TestTransformContext{
-		Item: input,
-	}
+	ctx := tqltest.NewTestTransformContext(
+		t,
+		input,
+	)
 
 	target := &tql.StandardGetSetter{
 		Getter: func(ctx tql.TransformContext) interface{} {

@@ -15,7 +15,11 @@
 package tqltest // import "github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql/tqltest"
 
 import (
+	"testing"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap/zaptest"
 )
 
 func Strp(s string) *string {
@@ -34,8 +38,18 @@ func Boolp(b bool) *bool {
 	return &b
 }
 
+func NewTestTransformContext(t *testing.T, item interface{}) TestTransformContext {
+	return TestTransformContext{
+		Item: item,
+		ProcessorContext: tql.ProcessorContextData{
+			Logger: zaptest.NewLogger(t),
+		},
+	}
+}
+
 type TestTransformContext struct {
-	Item interface{}
+	Item             interface{}
+	ProcessorContext tql.ProcessorContext
 }
 
 func (ctx TestTransformContext) GetItem() interface{} {
@@ -48,4 +62,8 @@ func (ctx TestTransformContext) GetInstrumentationScope() pcommon.Instrumentatio
 
 func (ctx TestTransformContext) GetResource() pcommon.Resource {
 	return pcommon.Resource{}
+}
+
+func (ctx TestTransformContext) GetProcessorContext() tql.ProcessorContext {
+	return ctx.ProcessorContext
 }

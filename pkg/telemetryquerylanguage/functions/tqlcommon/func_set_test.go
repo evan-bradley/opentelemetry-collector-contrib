@@ -60,9 +60,10 @@ func Test_set(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			scenarioValue := pcommon.NewValueString(input.StringVal())
 
-			ctx := tqltest.TestTransformContext{
-				Item: scenarioValue,
-			}
+			ctx := tqltest.NewTestTransformContext(
+				t,
+				scenarioValue,
+			)
 
 			exprFunc, _ := Set(tt.setter, tt.getter)
 			exprFunc(ctx)
@@ -76,9 +77,10 @@ func Test_set(t *testing.T) {
 }
 
 func Test_set_get_nil(t *testing.T) {
-	ctx := tqltest.TestTransformContext{
-		Item: nil,
-	}
+	ctx := tqltest.NewTestTransformContext(
+		t,
+		nil,
+	)
 
 	setter := &tql.StandardGetSetter{
 		Setter: func(ctx tql.TransformContext, val interface{}) {

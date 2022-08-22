@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql"
 )
@@ -49,8 +50,8 @@ func TruncateAll(target tql.GetSetter, limit int64) (tql.ExprFunc, error) {
 				return true
 			})
 			target.Set(ctx, updated)
-			// TODO: Write log when truncation is performed
-			// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/9730
+
+			ctx.GetProcessorContext().GetLogger().Info("Truncated attributes", zap.Int64("limit", limit))
 		}
 		return nil
 	}, nil

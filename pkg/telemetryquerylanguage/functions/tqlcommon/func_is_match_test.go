@@ -83,7 +83,7 @@ func Test_isMatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := tqltest.TestTransformContext{}
+			ctx := tqltest.NewTestTransformContext(t, nil)
 
 			exprFunc, _ := IsMatch(tt.target, tt.pattern)
 			actual := exprFunc(ctx)

@@ -18,12 +18,28 @@ import (
 	"fmt"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap"
 )
 
 type TransformContext interface {
 	GetItem() interface{}
 	GetInstrumentationScope() pcommon.InstrumentationScope
 	GetResource() pcommon.Resource
+	GetProcessorContext() ProcessorContext
+}
+
+// ProcessorContext is a basic interface for providing runtime dependencies from a processor to TQL functions.
+type ProcessorContext interface {
+	GetLogger() *zap.Logger
+}
+
+// ProcessorContextData is a concrete implementation to the ProcessorContext interface.
+type ProcessorContextData struct {
+	Logger *zap.Logger
+}
+
+func (pcd ProcessorContextData) GetLogger() *zap.Logger {
+	return pcd.Logger
 }
 
 type ExprFunc func(ctx TransformContext) interface{}

@@ -30,6 +30,7 @@ type LogTransformContext struct {
 	Log                  plog.LogRecord
 	InstrumentationScope pcommon.InstrumentationScope
 	Resource             pcommon.Resource
+	ProcessorContext     tql.ProcessorContext
 }
 
 func (ctx LogTransformContext) GetItem() interface{} {
@@ -42,6 +43,10 @@ func (ctx LogTransformContext) GetInstrumentationScope() pcommon.Instrumentation
 
 func (ctx LogTransformContext) GetResource() pcommon.Resource {
 	return ctx.Resource
+}
+
+func (ctx LogTransformContext) GetProcessorContext() tql.ProcessorContext {
+	return ctx.ProcessorContext
 }
 
 var symbolTable = map[tql.EnumSymbol]tql.Enum{

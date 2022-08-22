@@ -38,7 +38,7 @@ func Test_traceID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ctx := tqltest.TestTransformContext{}
+			ctx := tqltest.NewTestTransformContext(t, nil)
 
 			exprFunc, _ := TraceID(tt.bytes)
 			actual := exprFunc(ctx)

@@ -23,6 +23,7 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/contexts/tqllogs"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor/internal/common"
 )
 
 type Processor struct {
@@ -41,8 +42,9 @@ func NewProcessor(statements []string, functions map[string]interface{}, setting
 	}, nil
 }
 
-func (p *Processor) ProcessLogs(_ context.Context, td plog.Logs) (plog.Logs, error) {
-	ctx := tqllogs.LogTransformContext{}
+func (p *Processor) ProcessLogs(cctx context.Context, td plog.Logs) (plog.Logs, error) {
+	pCtx := common.TransformProcessorContext{ProcessorContextData: tql.ProcessorContextData{Logger: p.logger}, Info: "example info string", ContextObject: cctx}
+	ctx := tqllogs.LogTransformContext{ProcessorContext: pCtx}
 	for i := 0; i < td.ResourceLogs().Len(); i++ {
 		rlogs := td.ResourceLogs().At(i)
 		ctx.Resource = rlogs.Resource()

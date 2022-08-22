@@ -31,6 +31,7 @@ type SpanTransformContext struct {
 	Span                 ptrace.Span
 	InstrumentationScope pcommon.InstrumentationScope
 	Resource             pcommon.Resource
+	ProcessorContext     tql.ProcessorContext
 }
 
 func (ctx SpanTransformContext) GetItem() interface{} {
@@ -43,6 +44,10 @@ func (ctx SpanTransformContext) GetInstrumentationScope() pcommon.Instrumentatio
 
 func (ctx SpanTransformContext) GetResource() pcommon.Resource {
 	return ctx.Resource
+}
+
+func (ctx SpanTransformContext) GetProcessorContext() tql.ProcessorContext {
+	return ctx.ProcessorContext
 }
 
 var symbolTable = map[tql.EnumSymbol]tql.Enum{

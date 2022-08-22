@@ -23,6 +23,7 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/contexts/tqltraces"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor/internal/common"
 )
 
 type Processor struct {
@@ -41,8 +42,9 @@ func NewProcessor(statements []string, functions map[string]interface{}, setting
 	}, nil
 }
 
-func (p *Processor) ProcessTraces(_ context.Context, td ptrace.Traces) (ptrace.Traces, error) {
-	ctx := tqltraces.SpanTransformContext{}
+func (p *Processor) ProcessTraces(cctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
+	pCtx := common.TransformProcessorContext{ProcessorContextData: tql.ProcessorContextData{Logger: p.logger}, Info: "example info string", ContextObject: cctx}
+	ctx := tqltraces.SpanTransformContext{ProcessorContext: pCtx}
 	for i := 0; i < td.ResourceSpans().Len(); i++ {
 		rspans := td.ResourceSpans().At(i)
 		ctx.Resource = rspans.Resource()
