@@ -18,11 +18,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap/zaptest"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql/tqltest"
 )
 
 func Test_newComparisonEvaluator(t *testing.T) {
+	p := Parser{
+		Functions:  DefaultFunctionsForTests(),
+		PathParser: testParsePath,
+		EnumParser: testParseEnum,
+		Logger:     zaptest.NewLogger(t),
+	}
+
 	tests := []struct {
 		name       string
 		comparison *Comparison
@@ -122,7 +130,7 @@ func Test_newComparisonEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			evaluate, err := newComparisonEvaluator(tt.comparison, DefaultFunctionsForTests(), testParsePath, testParseEnum)
+			evaluate, err := p.newComparisonEvaluator(tt.comparison)
 			assert.NoError(t, err)
 			assert.True(t, evaluate(tqltest.TestTransformContext{
 				Item: tt.item,
@@ -132,6 +140,13 @@ func Test_newComparisonEvaluator(t *testing.T) {
 }
 
 func Test_newConditionEvaluator_invalid(t *testing.T) {
+	p := Parser{
+		Functions:  DefaultFunctionsForTests(),
+		PathParser: testParsePath,
+		EnumParser: testParseEnum,
+		Logger:     zaptest.NewLogger(t),
+	}
+
 	tests := []struct {
 		name       string
 		comparison *Comparison
@@ -163,13 +178,20 @@ func Test_newConditionEvaluator_invalid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := newComparisonEvaluator(tt.comparison, DefaultFunctionsForTests(), testParsePath, testParseEnum)
+			_, err := p.newComparisonEvaluator(tt.comparison)
 			assert.Error(t, err)
 		})
 	}
 }
 
 func Test_newBooleanExpressionEvaluator(t *testing.T) {
+	p := Parser{
+		Functions:  DefaultFunctionsForTests(),
+		PathParser: testParsePath,
+		EnumParser: testParseEnum,
+		Logger:     zaptest.NewLogger(t),
+	}
+
 	tests := []struct {
 		name string
 		want bool
@@ -352,7 +374,7 @@ func Test_newBooleanExpressionEvaluator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			evaluate, err := newBooleanExpressionEvaluator(tt.expr, DefaultFunctionsForTests(), testParsePath, testParseEnum)
+			evaluate, err := p.newBooleanExpressionEvaluator(tt.expr)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, evaluate(tqltest.TestTransformContext{
 				Item: nil,
