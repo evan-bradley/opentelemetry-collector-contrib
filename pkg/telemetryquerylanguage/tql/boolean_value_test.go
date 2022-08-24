@@ -24,12 +24,12 @@ import (
 )
 
 func Test_newComparisonEvaluator(t *testing.T) {
-	p := Parser{
-		Functions:  DefaultFunctionsForTests(),
-		PathParser: testParsePath,
-		EnumParser: testParseEnum,
-		Logger:     zaptest.NewLogger(t),
-	}
+	p := NewParser(
+		DefaultFunctionsForTests(),
+		testParsePath,
+		testParseEnum,
+		zaptest.NewLogger(t),
+	)
 
 	tests := []struct {
 		name       string
@@ -140,12 +140,12 @@ func Test_newComparisonEvaluator(t *testing.T) {
 }
 
 func Test_newConditionEvaluator_invalid(t *testing.T) {
-	p := Parser{
-		Functions:  DefaultFunctionsForTests(),
-		PathParser: testParsePath,
-		EnumParser: testParseEnum,
-		Logger:     zaptest.NewLogger(t),
-	}
+	p := NewParser(
+		DefaultFunctionsForTests(),
+		testParsePath,
+		testParseEnum,
+		zaptest.NewLogger(t),
+	)
 
 	tests := []struct {
 		name       string
@@ -185,12 +185,12 @@ func Test_newConditionEvaluator_invalid(t *testing.T) {
 }
 
 func Test_newBooleanExpressionEvaluator(t *testing.T) {
-	p := Parser{
-		Functions:  DefaultFunctionsForTests(),
-		PathParser: testParsePath,
-		EnumParser: testParseEnum,
-		Logger:     zaptest.NewLogger(t),
-	}
+	p := NewParser(
+		DefaultFunctionsForTests(),
+		testParsePath,
+		testParseEnum,
+		zaptest.NewLogger(t),
+	)
 
 	tests := []struct {
 		name string
