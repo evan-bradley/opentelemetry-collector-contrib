@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql/tqltest"
 )
@@ -28,7 +27,7 @@ func Test_newComparisonEvaluator(t *testing.T) {
 		DefaultFunctionsForTests(),
 		testParsePath,
 		testParseEnum,
-		zaptest.NewLogger(t),
+		NoOpLogger{},
 	)
 
 	tests := []struct {
@@ -144,7 +143,7 @@ func Test_newConditionEvaluator_invalid(t *testing.T) {
 		DefaultFunctionsForTests(),
 		testParsePath,
 		testParseEnum,
-		zaptest.NewLogger(t),
+		NoOpLogger{},
 	)
 
 	tests := []struct {
@@ -189,7 +188,7 @@ func Test_newBooleanExpressionEvaluator(t *testing.T) {
 		DefaultFunctionsForTests(),
 		testParsePath,
 		testParseEnum,
-		zaptest.NewLogger(t),
+		NoOpLogger{},
 	)
 
 	tests := []struct {
