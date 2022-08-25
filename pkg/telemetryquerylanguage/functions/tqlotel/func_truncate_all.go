@@ -22,7 +22,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/telemetryquerylanguage/tql"
 )
 
-func TruncateAll(target tql.GetSetter, limit int64) (tql.ExprFunc, error) {
+func TruncateAll(logger tql.Logger, target tql.GetSetter, limit int64) (tql.ExprFunc, error) {
 	if limit < 0 {
 		return nil, fmt.Errorf("invalid limit for truncate_all function, %d cannot be negative", limit)
 	}
@@ -49,8 +49,8 @@ func TruncateAll(target tql.GetSetter, limit int64) (tql.ExprFunc, error) {
 				return true
 			})
 			target.Set(ctx, updated)
-			// TODO: Write log when truncation is performed
-			// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/9730
+
+			logger.WithFields(map[string]interface{}{"attribute_limit": limit}).Info("Truncated attributes.")
 		}
 		return nil
 	}, nil

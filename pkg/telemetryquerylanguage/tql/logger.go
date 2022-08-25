@@ -1,5 +1,7 @@
 package tql
 
+// Logger allows printing logs inside TQL functions using a
+// logging framework provided by the component using the TQL.
 type Logger interface {
 	WithFields(field map[string]interface{}) Logger
 	Info(msg string)
