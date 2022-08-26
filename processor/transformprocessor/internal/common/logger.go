@@ -19,7 +19,7 @@ func NewTQLLogger(logger *zap.Logger) TQLLogger {
 	}
 }
 
-func (tqll TQLLogger) WithFields(newFields map[string]interface{}) tql.Logger {
+func (tqll TQLLogger) WithFields(newFields map[string]any) tql.Logger {
 	fieldSet := make(map[string]zap.Field)
 
 	for _, field := range *tqll.fields {
