@@ -9,49 +9,41 @@ import (
 
 type TQLLogger struct {
 	logger *zap.Logger
-	fields *[]zap.Field
 }
 
 func NewTQLLogger(logger *zap.Logger) TQLLogger {
 	return TQLLogger{
 		logger: logger,
-		fields: &[]zap.Field{},
 	}
 }
 
-func (tqll TQLLogger) WithFields(newFields map[string]any) tql.Logger {
-	fieldSet := make(map[string]zap.Field)
+// WithFields creates a new logger that will include the specified fields
+// in all subsequent logs in addition to fields attached to the context
+// of the parent logger. Note that fields are not deduplicated.
+func (tqll TQLLogger) WithFields(fields map[string]any) tql.Logger {
+	newFields := make([]zap.Field, len(fields))
+	i := 0
 
-	for _, field := range *tqll.fields {
-		fieldSet[field.Key] = field
-	}
-
-	for k, v := range newFields {
+	for k, v := range fields {
 		switch val := v.(type) {
 		// zap.Any will base64 encode byte slices, but we want them printed as hexadecimal.
 		case []byte:
-			fieldSet[k] = zap.String(k, fmt.Sprintf("%x", val))
+			newFields[i] = zap.String(k, fmt.Sprintf("%x", val))
 		default:
-			fieldSet[k] = zap.Any(k, val)
+			newFields[i] = zap.Any(k, val)
 		}
-	}
-
-	fields := make([]zap.Field, len(fieldSet))
-
-	for _, v := range fieldSet {
-		fields = append(fields, v)
+		i++
 	}
 
 	return TQLLogger{
-		fields: &fields,
-		logger: tqll.logger,
+		logger: tqll.logger.With(newFields...),
 	}
 }
 
 func (tqll TQLLogger) Info(msg string) {
-	tqll.logger.Info(msg, *tqll.fields...)
+	tqll.logger.Info(msg)
 }
 
 func (tqll TQLLogger) Error(msg string) {
-	tqll.logger.Error(msg, *tqll.fields...)
+	tqll.logger.Error(msg)
 }
