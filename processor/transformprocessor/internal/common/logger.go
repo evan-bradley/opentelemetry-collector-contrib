@@ -36,7 +36,7 @@ func (tqll TQLLogger) WithFields(newFields map[string]any) tql.Logger {
 		}
 	}
 
-	fields := []zap.Field{}
+	fields := make([]zap.Field, len(fieldSet))
 
 	for _, v := range fieldSet {
 		fields = append(fields, v)

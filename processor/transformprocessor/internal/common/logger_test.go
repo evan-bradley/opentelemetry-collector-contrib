@@ -233,6 +233,6 @@ func BenchmarkAddingTenFields(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		tqll = tqll.WithFields(fields).(TQLLogger)
+		_ = tqll.WithFields(fields).(TQLLogger)
 	}
 }
