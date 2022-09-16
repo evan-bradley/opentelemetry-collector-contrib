@@ -18,12 +18,14 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl"
 )
 
-func Limit[K any](target ottl.GetSetter[K], limit int64, priorityKeys []string) (ottl.ExprFunc[K], error) {
+func Limit[K any](settings component.TelemetrySettings, target ottl.GetSetter[K], limit int64, priorityKeys []string) (ottl.ExprFunc[K], error) {
 	if limit < 0 {
 		return nil, fmt.Errorf("invalid limit for limit function, %d cannot be negative", limit)
 	}
@@ -37,6 +39,8 @@ func Limit[K any](target ottl.GetSetter[K], limit int64, priorityKeys []string) 
 	for _, key := range priorityKeys {
 		keep[key] = struct{}{}
 	}
+
+	logger := settings.Logger.With(zap.Int64("limit", limit))
 
 	return func(ctx context.Context, tCtx K) (interface{}, error) {
 		val, err := target.Get(ctx, tCtx)
@@ -73,8 +77,9 @@ func Limit[K any](target ottl.GetSetter[K], limit int64, priorityKeys []string) 
 			}
 			return true
 		})
-		// TODO: Write log when limiting is performed
-		// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/9730
+
+		logger.Debug("Reduced attribute count to specified limit.")
+
 		return nil, nil
 	}, nil
 }

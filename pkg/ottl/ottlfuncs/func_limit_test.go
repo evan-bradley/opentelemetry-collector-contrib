@@ -19,7 +19,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl"
 )
@@ -41,32 +45,36 @@ func Test_limit(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		target ottl.GetSetter[pcommon.Map]
-		limit  int64
-		keep   []string
-		want   func(pcommon.Map)
+		name      string
+		target    ottl.GetSetter[pcommon.Map]
+		limit     int64
+		keep      []string
+		shouldLog bool
+		want      func(pcommon.Map)
 	}{
 		{
-			name:   "limit to 1",
-			target: target,
-			limit:  int64(1),
+			name:      "limit to 1",
+			target:    target,
+			limit:     int64(1),
+			shouldLog: true,
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 			},
 		},
 		{
-			name:   "limit to zero",
-			target: target,
-			limit:  int64(0),
+			name:      "limit to zero",
+			target:    target,
+			limit:     int64(0),
+			shouldLog: true,
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.EnsureCapacity(input.Len())
 			},
 		},
 		{
-			name:   "limit nothing",
-			target: target,
-			limit:  int64(100),
+			name:      "limit nothing",
+			target:    target,
+			limit:     int64(100),
+			shouldLog: false,
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 				expectedMap.PutInt("test2", 3)
@@ -74,9 +82,10 @@ func Test_limit(t *testing.T) {
 			},
 		},
 		{
-			name:   "limit exact",
-			target: target,
-			limit:  int64(3),
+			name:      "limit exact",
+			target:    target,
+			limit:     int64(3),
+			shouldLog: false,
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 				expectedMap.PutInt("test2", 3)
@@ -84,39 +93,43 @@ func Test_limit(t *testing.T) {
 			},
 		},
 		{
-			name:   "keep one key",
-			target: target,
-			limit:  int64(2),
-			keep:   []string{"test3"},
+			name:      "keep one key",
+			target:    target,
+			limit:     int64(2),
+			shouldLog: true,
+			keep:      []string{"test3"},
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 				expectedMap.PutBool("test3", true)
 			},
 		},
 		{
-			name:   "keep same # of keys as limit",
-			target: target,
-			limit:  int64(2),
-			keep:   []string{"test", "test3"},
+			name:      "keep same # of keys as limit",
+			target:    target,
+			limit:     int64(2),
+			shouldLog: true,
+			keep:      []string{"test", "test3"},
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 				expectedMap.PutBool("test3", true)
 			},
 		},
 		{
-			name:   "keep not existing key",
-			target: target,
-			limit:  int64(1),
-			keep:   []string{"te"},
+			name:      "keep not existing key",
+			target:    target,
+			limit:     int64(1),
+			shouldLog: true,
+			keep:      []string{"te"},
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 			},
 		},
 		{
-			name:   "keep not-/existing keys",
-			target: target,
-			limit:  int64(2),
-			keep:   []string{"te", "test3"},
+			name:      "keep not-/existing keys",
+			target:    target,
+			limit:     int64(2),
+			shouldLog: true,
+			keep:      []string{"te", "test3"},
 			want: func(expectedMap pcommon.Map) {
 				expectedMap.PutStr("test", "hello world")
 				expectedMap.PutBool("test3", true)
@@ -125,15 +138,25 @@ func Test_limit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			settings, logs := createTelemetrySettings()
 			scenarioMap := pcommon.NewMap()
 			input.CopyTo(scenarioMap)
 
-			exprFunc, err := Limit(tt.target, tt.limit, tt.keep)
+			exprFunc, err := Limit(settings, tt.target, tt.limit, tt.keep)
 			assert.NoError(t, err)
 
 			result, err := exprFunc(nil, scenarioMap)
 			assert.NoError(t, err)
 			assert.Nil(t, result)
+
+			if tt.shouldLog {
+				require.Equal(t, 1, len(logs.All()))
+				assert.Equal(t, zap.DebugLevel, logs.All()[0].Level)
+				assert.Equal(t, tt.limit, logs.All()[0].ContextMap()["limit"])
+			} else {
+				assert.Equal(t, 0, len(logs.All()))
+			}
 
 			expected := pcommon.NewMap()
 			tt.want(expected)
@@ -163,14 +186,16 @@ func Test_limit_validation(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		settings, _ := createTelemetrySettings()
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := Limit(tt.target, tt.limit, tt.keep)
+			_, err := Limit(settings, tt.target, tt.limit, tt.keep)
 			assert.Error(t, err)
 		})
 	}
 }
 
 func Test_limit_bad_input(t *testing.T) {
+	settings, _ := createTelemetrySettings()
 	input := pcommon.NewValueStr("not a map")
 	target := &ottl.StandardGetSetter[interface{}]{
 		Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
@@ -182,7 +207,7 @@ func Test_limit_bad_input(t *testing.T) {
 		},
 	}
 
-	exprFunc, err := Limit[interface{}](target, 1, []string{})
+	exprFunc, err := Limit[interface{}](settings, target, 1, []string{})
 	assert.NoError(t, err)
 	result, err := exprFunc(nil, input)
 	assert.NoError(t, err)
@@ -191,6 +216,7 @@ func Test_limit_bad_input(t *testing.T) {
 }
 
 func Test_limit_get_nil(t *testing.T) {
+	settings, _ := createTelemetrySettings()
 	target := &ottl.StandardGetSetter[interface{}]{
 		Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 			return tCtx, nil
@@ -201,10 +227,17 @@ func Test_limit_get_nil(t *testing.T) {
 		},
 	}
 
-	exprFunc, err := Limit[interface{}](target, 1, []string{})
+	exprFunc, err := Limit[interface{}](settings, target, 1, []string{})
 	assert.NoError(t, err)
 	result, err := exprFunc(nil, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, result)
 	assert.Nil(t, result)
+}
+
+func createTelemetrySettings() (component.TelemetrySettings, *observer.ObservedLogs) {
+	core, logs := observer.New(zap.DebugLevel)
+	settings := component.TelemetrySettings{Logger: zap.New(core)}
+
+	return settings, logs
 }

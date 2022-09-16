@@ -18,19 +18,24 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl"
 )
 
-func TruncateAll[K any](target ottl.GetSetter[K], limit int64) (ottl.ExprFunc[K], error) {
+func TruncateAll[K any](settings component.TelemetrySettings, target ottl.GetSetter[K], limit int64) (ottl.ExprFunc[K], error) {
 	if limit < 0 {
 		return nil, fmt.Errorf("invalid limit for truncate_all function, %d cannot be negative", limit)
 	}
+	logger := settings.Logger.With(zap.Int64("limit", limit))
+
 	return func(ctx context.Context, tCtx K) (interface{}, error) {
 		if limit < 0 {
 			return nil, nil
 		}
+		didTruncate := false
 
 		val, err := target.Get(ctx, tCtx)
 		if err != nil {
@@ -50,6 +55,7 @@ func TruncateAll[K any](target ottl.GetSetter[K], limit int64) (ottl.ExprFunc[K]
 		updated.Range(func(key string, value pcommon.Value) bool {
 			stringVal := value.Str()
 			if int64(len(stringVal)) > limit {
+				didTruncate = true
 				value.SetStr(stringVal[:limit])
 			}
 			return true
@@ -58,8 +64,11 @@ func TruncateAll[K any](target ottl.GetSetter[K], limit int64) (ottl.ExprFunc[K]
 		if err != nil {
 			return nil, err
 		}
-		// TODO: Write log when truncation is performed
-		// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/9730
+
+		if didTruncate {
+			logger.Debug("Truncated at least one attribute value to string length limit.")
+		}
+
 		return nil, nil
 	}, nil
 }
