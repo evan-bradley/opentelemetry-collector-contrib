@@ -275,6 +275,16 @@ func (e *exporter) sendBatch(ctx context.Context, lines []string) error {
 		return consumererror.NewPermanent(fmt.Errorf("metrics ingest v2 module not found - ensure module is enabled and endpoint is correct"))
 	}
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return consumererror.NewPermanent(
+			fmt.Errorf("The server responded that too many requests have been sent. Please check your export interval and batch sizes, or see the following for more information: https://www.dynatrace.com/support/help/dynatrace-api/basics/access-limit"),
+		)
+	}
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return consumererror.NewPermanent(fmt.Errorf(`Received error response status: "%v"`, resp.Status))
+	}
+
 	// No known errors
 	return nil
 }
