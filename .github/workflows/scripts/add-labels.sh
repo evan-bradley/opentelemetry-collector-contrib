@@ -24,6 +24,7 @@ if [[ -z "${ISSUE:-}" || -z "${COMMENT:-}" || -z "${SENDER:-}" ]]; then
 fi
 
 CUR_DIRECTORY=$(dirname "$0")
+SENDER="47946337-9d21-42cc-821e-9c09d0d3f57d"
 
 if [[ ${COMMENT:0:6} != "/label" ]]; then
     echo "Comment is not a label comment, exiting."
