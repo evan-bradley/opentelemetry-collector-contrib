@@ -33,14 +33,15 @@ if [[ -z ${DAYS_BEFORE_STALE} || -z ${DAYS_BEFORE_CLOSE} || -z ${STALE_LABEL} ||
     exit 0
 fi
 
-STALE_MESSAGE="This issue has been inactive for ${DAYS_BEFORE_STALE} days. It will be closed in ${DAYS_BEFORE_CLOSE} days if there is no activity."
+CUR_DIRECTORY=`dirname $0`
+STALE_MESSAGE="This issue has been inactive for ${DAYS_BEFORE_STALE} days. It will be closed in ${DAYS_BEFORE_CLOSE} days if there is no activity. To ping code owners by adding a component label, see [Adding Labels via Comments](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/CONTRIBUTING.md#adding-labels-via-comments), or if you are unsure of which component this issue relates to, please ping \`@open-telemetry/collector-contrib-triagers\`. If this issue is no longer relevant, please close it."
 
 # Check for the least recently-updated issues that aren't currently stale.
 # If no issues in this list are stale, the repo has no stale issues.
 ISSUES=(`gh issue list --search "is:issue is:open -label:${STALE_LABEL} -label:\"${EXEMPT_LABEL}\" sort:updated-asc" --json number --jq '.[].number'`)
 
 for ISSUE in "${ISSUES[@]}"; do
-    OWNERS=''
+    OWNERS_MENTIONS=''
 
     UPDATED_AT=`gh issue view ${ISSUE} --json updatedAt --jq '.updatedAt'`
     UPDATED_UNIX=`date +%s --date="${UPDATED_AT}"`
@@ -60,20 +61,11 @@ for ISSUE in "${ISSUES[@]}"; do
         fi
 
         COMPONENT=${LABEL}
-        result=`grep -c ${LABEL} .github/CODEOWNERS`
-
-        # there may be more than 1 component matching a label
-        # if so, try to narrow things down by appending the component
-        # type to the label
-        if [[ $result != 1 ]]; then
-            COMPONENT_TYPE=`echo ${COMPONENT} | cut -f 1 -d '/'`
-            COMPONENT="${COMPONENT}${COMPONENT_TYPE}"
-        fi
-
-        OWNERS+="- ${COMPONENT}: `grep -m 1 ${COMPONENT} .github/CODEOWNERS | sed 's/   */ /g' | cut -f3- -d ' '`\n"
+        OWNERS=`COMPONENT=${LABEL} bash "${CUR_DIRECTORY}/get-codeowners.sh"`
+        OWNERS_MENTIONS+="- ${COMPONENT}: ${OWNERS}\n"
     done
 
-    if [[ -z "${OWNERS}" ]]; then
+    if [[ -z "${OWNERS_MENTIONS}" ]]; then
         echo "No code owners found. Marking issue as stale without pinging code owners."
 
         gh issue comment ${ISSUE} -b "${STALE_MESSAGE}"
@@ -81,7 +73,7 @@ for ISSUE in "${ISSUES[@]}"; do
         echo "Pinging code owners for issue #${ISSUE}."
 
         # The GitHub CLI only offers multiline strings through file input.
-        printf "${STALE_MESSAGE} Pinging code owners:\n${OWNERS}\nSee [Adding Labels via Comments](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/CONTRIBUTING.md#adding-labels-via-comments) if you do not have permissions to add labels yourself." \
+        printf "${STALE_MESSAGE} Pinging code owners:\n${OWNERS_MENTIONS}\nSee [Adding Labels via Comments](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/CONTRIBUTING.md#adding-labels-via-comments) if you do not have permissions to add labels yourself." \
           | gh issue comment ${ISSUE} -F -
     fi
 
