@@ -13,211 +13,214 @@
 #
 # NOTE: Lines should be entered in the following format:
 # <component_path_relative_from_project_root>/<min_1_space><owner_1><space><owner_2><space>..<owner_n>
-# extension/oauth2clientauthextension/                 @open-telemetry/collector-contrib-approvers @pavankrish123 @jpkrohling
+# extension/oauth2clientauthextension/                 #xxxx #x12345 #x5132421 #x121717
 # Path separator and minimum of 1 space between component path and owners is
 # important for validation steps
 #
 
-* @open-telemetry/collector-contrib-approvers
+* #xxxx
 
-cmd/configschema/                                    @open-telemetry/collector-contrib-approvers @mx-psi @dmitryax @pmcollins
-cmd/mdatagen/                                        @open-telemetry/collector-contrib-approvers @dmitryax
-cmd/otelcontribcol/                                  @open-telemetry/collector-contrib-approvers @codeboten
-cmd/telemetrygen/                                    @open-telemetry/collector-contrib-approvers @mx-psi @amenasria @codeboten
-cmd/tracegen/                                        @open-telemetry/collector-contrib-approvers @jpkrohling
+cmd/configschema/                                    #xxxx #x12345 #x5132421 #x121717
+cmd/mdatagen/                                        #xxxx #x12345 #x5132421 #x121717
+cmd/otelcontribcol/                                  #xxxx #x12345 #x5132421 #x121717
+cmd/telemetrygen/                                    #xxxx #x12345 #x5132421 #x121717
+cmd/tracegen/                                        #xxxx #x12345 #x5132421 #x121717
 
-confmap/provider/s3provider/                         @open-telemetry/collector-contrib-approvers @Aneurysm9
+confmap/provider/s3provider/                         #xxxx #x12345 #x5132421 #x121717
 
-examples/demo/                                       @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
+examples/demo/                                       #xxxx #x12345 #x5132421 #x121717
 
-exporter/alibabacloudlogserviceexporter/             @open-telemetry/collector-contrib-approvers @shabicheng @kongluoxing @qiansheng91
-exporter/awscloudwatchlogsexporter/                  @open-telemetry/collector-contrib-approvers @boostchicken
-exporter/awsemfexporter/                             @open-telemetry/collector-contrib-approvers @Aneurysm9 @shaochengwang @mxiamxia
-exporter/awskinesisexporter/                         @open-telemetry/collector-contrib-approvers @Aneurysm9 @MovieStoreGuy
-exporter/awsxrayexporter/                            @open-telemetry/collector-contrib-approvers @willarmiros
-exporter/azuremonitorexporter/                       @open-telemetry/collector-contrib-approvers @pcwiese
-exporter/azuredataexplorerexporter/                  @open-telemetry/collector-contrib-approvers @asaharan @ag-ramachandran
-exporter/carbonexporter/                             @open-telemetry/collector-contrib-approvers @pjanotti
-exporter/clickhouseexporter/                         @open-telemetry/collector-contrib-approvers @hanjm @dmitryax
-exporter/coralogixexporter/                          @open-telemetry/collector-contrib-approvers @oded-dd @ofirshmuel
-exporter/datadogexporter/                            @open-telemetry/collector-contrib-approvers @KSerrania @mx-psi @gbbr @knusbaum @amenasria @dineshg13
-exporter/dynatraceexporter/                          @open-telemetry/collector-contrib-approvers @dyladan @arminru @evan-bradley
-exporter/elasticsearchexporter/                      @open-telemetry/collector-contrib-approvers @JaredTan95
-exporter/f5cloudexporter/                            @open-telemetry/collector-contrib-approvers @gramidt
-exporter/fileexporter/                               @open-telemetry/collector-contrib-approvers @atingchen
-exporter/googlecloudexporter/                        @open-telemetry/collector-contrib-approvers @aabmass @dashpole @jsuereth @punya @tbarker25 @damemi
-exporter/googlemanagedprometheusexporter/            @open-telemetry/collector-contrib-approvers @aabmass @dashpole @jsuereth @punya @tbarker25 @damemi
-exporter/googlecloudpubsubexporter/                  @open-telemetry/collector-contrib-approvers @alexvanboxel
-exporter/humioexporter/                              @open-telemetry/collector-contrib-approvers @xitric
-exporter/influxdbexporter/                           @open-telemetry/collector-contrib-approvers @jacobmarble
-exporter/instanaexporter/                            @open-telemetry/collector-contrib-approvers @jpkrohling @hickeyma
-exporter/jaegerexporter/                             @open-telemetry/collector-contrib-approvers @jpkrohling
-exporter/jaegerthrifthttpexporter/                   @open-telemetry/collector-contrib-approvers @jpkrohling @pavolloffay
-exporter/kafkaexporter/                              @open-telemetry/collector-contrib-approvers @pavolloffay @MovieStoreGuy
-exporter/loadbalancingexporter/                      @open-telemetry/collector-contrib-approvers @jpkrohling
-exporter/logzioexporter/                             @open-telemetry/collector-contrib-approvers @jkowall @Doron-Bargo @yotamloe
-exporter/lokiexporter/                               @open-telemetry/collector-contrib-approvers @gramidt @gouthamve @jpkrohling @kovrus @mar4uk
-exporter/mezmoexporter/                              @open-telemetry/collector-contrib-approvers @dashpole @billmeyer @gjanco
-exporter/opencensusexporter/                         @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-exporter/parquetexporter/                            @open-telemetry/collector-contrib-approvers @atoulme
-exporter/prometheusexporter/                         @open-telemetry/collector-contrib-approvers @Aneurysm9
-exporter/prometheusremotewriteexporter/              @open-telemetry/collector-contrib-approvers @Aneurysm9
-exporter/pulsarexporter/                             @open-telemetry/collector-contrib-approvers @dmitryax @tjiuming
-exporter/sapmexporter/                               @open-telemetry/collector-contrib-approvers @owais @dmitryax
-exporter/sentryexporter/                             @open-telemetry/collector-contrib-approvers @AbhiPrasad
-exporter/signalfxexporter/                           @open-telemetry/collector-contrib-approvers @pmcollins @dmitryax
-exporter/skywalkingexporter/                         @open-telemetry/collector-contrib-approvers @liqiangz
-exporter/splunkhecexporter/                          @open-telemetry/collector-contrib-approvers @atoulme @dmitryax
-exporter/sumologicexporter/                          @open-telemetry/collector-contrib-approvers @sumo-drosiek
-exporter/tanzuobservabilityexporter/                 @open-telemetry/collector-contrib-approvers @oppegard @thepeterstone @keep94
-exporter/tencentcloudlogserviceexporter/             @open-telemetry/collector-contrib-approvers @wgliang @yiyang5055
-exporter/zipkinexporter/                             @open-telemetry/collector-contrib-approvers
+exporter/alibabacloudlogserviceexporter/             #xxxx #x12345 #x5132421 #x121717
+exporter/awscloudwatchlogsexporter/                  #xxxx #x12345 #x5132421 #x121717
+exporter/awsemfexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/awskinesisexporter/                         #xxxx #x12345 #x5132421 #x121717
+exporter/awsxrayexporter/                            #xxxx #x12345 #x5132421 #x121717
+exporter/azuremonitorexporter/                       #xxxx #x12345 #x5132421 #x121717
+exporter/azuredataexplorerexporter/                  #xxxx #x12345 #x5132421 #x121717
+exporter/carbonexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/clickhouseexporter/                         #xxxx #x12345 #x5132421 #x121717
+exporter/coralogixexporter/                          #xxxx #x12345 #x5132421 #x121717
+exporter/datadogexporter/                            #xxxx #x12345 #x5132421 #x121717
+exporter/dynatraceexporter/                          #xxxx #x12345 #x5132421 #x121717
+exporter/elasticsearchexporter/                      #xxxx #x12345 #x5132421 #x121717
+exporter/f5cloudexporter/                            #xxxx #x12345 #x5132421 #x121717
+exporter/fileexporter/                               #xxxx #x12345 #x5132421 #x121717
+exporter/googlecloudexporter/                        #xxxx #x12345 #x5132421 #x121717
+exporter/googlemanagedprometheusexporter/            #xxxx #x12345 #x5132421 #x121717
+exporter/googlecloudpubsubexporter/                  #xxxx #x12345 #x5132421 #x121717
+exporter/humioexporter/                              #xxxx #x12345 #x5132421 #x121717
+exporter/influxdbexporter/                           #xxxx #x12345 #x5132421 #x121717
+exporter/instanaexporter/                            #xxxx #x12345 #x5132421 #x121717
+exporter/jaegerexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/jaegerthrifthttpexporter/                   #xxxx #x12345 #x5132421 #x121717
+exporter/kafkaexporter/                              #xxxx #x12345 #x5132421 #x121717
+exporter/loadbalancingexporter/                      #xxxx #x12345 #x5132421 #x121717
+exporter/logzioexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/lokiexporter/                               #xxxx #x12345 #x5132421 #x121717
+exporter/mezmoexporter/                              #xxxx #x12345 #x5132421 #x121717
+exporter/opencensusexporter/                         #xxxx #x12345 #x5132421 #x121717
+exporter/parquetexporter/                            #xxxx #x12345 #x5132421 #x121717
+exporter/prometheusexporter/                         #xxxx #x12345 #x5132421 #x121717
+exporter/prometheusremotewriteexporter/              #xxxx #x12345 #x5132421 #x121717
+exporter/pulsarexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/sapmexporter/                               #xxxx #x12345 #x5132421 #x121717
+exporter/sentryexporter/                             #xxxx #x12345 #x5132421 #x121717
+exporter/signalfxexporter/                           #xxxx #x12345 #x5132421 #x121717
+exporter/skywalkingexporter/                         #xxxx #x12345 #x5132421 #x121717
+exporter/splunkhecexporter/                          #xxxx #x12345 #x5132421 #x121717
+exporter/sumologicexporter/                          #xxxx #x12345 #x5132421 #x121717
+exporter/tanzuobservabilityexporter/                 #xxxx #x12345 #x5132421 #x121717
+exporter/tencentcloudlogserviceexporter/             #xxxx #x12345 #x5132421 #x121717
+exporter/zipkinexporter/                             #xxxx
+exporter/doesntexistexporter/                        #xxxx @evan-bradley
 
-extension/asapauthextension/                         @open-telemetry/collector-contrib-approvers @jamesmoessis @MovieStoreGuy
-extension/awsproxy/                                  @open-telemetry/collector-contrib-approvers @Aneurysm9 @mxiamxia
-extension/basicauthextension/                        @open-telemetry/collector-contrib-approvers @jpkrohling @svrakitin
-extension/bearertokenauthextension/                  @open-telemetry/collector-contrib-approvers @jpkrohling @pavankrish123
-extension/headerssetterextension/                    @open-telemetry/collector-contrib-approvers @jpkrohling @kovrus
-extension/healthcheckextension/                      @open-telemetry/collector-contrib-approvers @jpkrohling
-extension/jaegerremotesampling/                      @open-telemetry/collector-contrib-approvers @jpkrohling
-extension/oauth2clientauthextension/                 @open-telemetry/collector-contrib-approvers @pavankrish123 @jpkrohling
-extension/observer/                                  @open-telemetry/collector-contrib-approvers @dmitryax @rmfitzpatrick
-extension/observer/dockerobserver/                   @open-telemetry/collector-contrib-approvers @MovieStoreGuy
-extension/observer/ecstaskobserver/                  @open-telemetry/collector-contrib-approvers @rmfitzpatrick
-extension/observer/hostobserver/                     @open-telemetry/collector-contrib-approvers @MovieStoreGuy
-extension/observer/k8sobserver/                      @open-telemetry/collector-contrib-approvers @rmfitzpatrick @dmitryax
-extension/oidcauthextension/                         @open-telemetry/collector-contrib-approvers @jpkrohling
-extension/pprofextension/                            @open-telemetry/collector-contrib-approvers @MovieStoreGuy
-extension/sigv4authextension/                        @open-telemetry/collector-contrib-approvers @Aneurysm9 @erichsueh3
-extension/storage/                                   @open-telemetry/collector-contrib-approvers @dmitryax @atoulme @djaglowski
-extension/storage/dbstorage/                         @open-telemetry/collector-contrib-approvers @dmitryax @atoulme
-extension/storage/filestorage/                       @open-telemetry/collector-contrib-approvers @djaglowski
+extension/asapauthextension/                         #xxxx #x12345 #x5132421 #x121717
+extension/awsproxy/                                  #xxxx #x12345 #x5132421 #x121717
+extension/basicauthextension/                        #xxxx #x12345 #x5132421 #x121717
+extension/bearertokenauthextension/                  #xxxx #x12345 #x5132421 #x121717
+extension/headerssetterextension/                    #xxxx #x12345 #x5132421 #x121717
+extension/healthcheckextension/                      #xxxx #x12345 #x5132421 #x121717
+extension/jaegerremotesampling/                      #xxxx #x12345 #x5132421 #x121717
+extension/oauth2clientauthextension/                 #xxxx #x12345 #x5132421 #x121717
+extension/observer/                                  #xxxx #x12345 #x5132421 #x121717
+extension/observer/dockerobserver/                   #xxxx #x12345 #x5132421 #x121717
+extension/observer/ecstaskobserver/                  #xxxx #x12345 #x5132421 #x121717
+extension/observer/hostobserver/                     #xxxx #x12345 #x5132421 #x121717
+extension/observer/k8sobserver/                      #xxxx #x12345 #x5132421 #x121717
+extension/oidcauthextension/                         #xxxx #x12345 #x5132421 #x121717
+extension/pprofextension/                            #xxxx #x12345 #x5132421 #x121717
+extension/sigv4authextension/                        #xxxx #x12345 #x5132421 #x121717
+extension/storage/                                   #xxxx #x12345 #x5132421 #x121717
+extension/storage/dbstorage/                         #xxxx #x12345 #x5132421 #x121717
+extension/storage/filestorage/                       #xxxx #x12345 #x5132421 #x121717
 
-internal/aws/                                        @open-telemetry/collector-contrib-approvers @Aneurysm9 @mxiamxia
-internal/docker/                                     @open-telemetry/collector-contrib-approvers @mstumpfx @rmfitzpatrick
+internal/aws/                                        #xxxx #x12345 #x5132421 #x121717
+internal/docker/                                     #xxxx #x12345 #x5132421 #x121717
 
-internal/k8sconfig/                                  @open-telemetry/collector-contrib-approvers @pmcollins @dmitryax
-internal/kubelet/                                    @open-telemetry/collector-contrib-approvers @dmitryax
-internal/metadataproviders/                          @open-telemetry/collector-contrib-approvers @jrcamp @Aneurysm9 @dashpole
-internal/scrapertest/                                @open-telemetry/collector-contrib-approvers @djaglowski
-internal/splunk/                                     @open-telemetry/collector-contrib-approvers @pmcollins @dmitryax
-internal/tools/                                      @open-telemetry/collector-contrib-approvers
-internal/coreinternal/                               @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-internal/sharedcomponent/                            @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
+internal/k8sconfig/                                  #xxxx #x12345 #x5132421 #x121717
+internal/kubelet/                                    #xxxx #x12345 #x5132421 #x121717
+internal/metadataproviders/                          #xxxx #x12345 #x5132421 #x121717
+internal/scrapertest/                                #xxxx #x12345 #x5132421 #x121717
+internal/splunk/                                     #xxxx #x12345 #x5132421 #x121717
+internal/tools/                                      #xxxx
+internal/coreinternal/                               #xxxx #x12345 #x5132421 #x121717
+internal/sharedcomponent/                            #xxxx #x12345 #x5132421 #x121717
 
-pkg/batchpersignal/                                  @open-telemetry/collector-contrib-approvers @jpkrohling
-pkg/resourcetotelemetry/                             @open-telemetry/collector-contrib-approvers @mx-psi
-pkg/stanza/                                          @open-telemetry/collector-contrib-approvers @djaglowski
-pkg/ottl/                                            @open-telemetry/collector-contrib-approvers @TylerHelmuth @kentquirk @bogdandrutu @evan-bradley
-pkg/translator/jaeger/                               @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-pkg/translator/loki/                                 @open-telemetry/collector-contrib-approvers @gouthamve @jpkrohling @kovrus @mar4uk
-pkg/translator/opencensus/                           @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-pkg/translator/prometheus/                           @open-telemetry/collector-contrib-approvers @dashpole @bertysentry
-pkg/translator/prometheusremotewrite/                @open-telemetry/collector-contrib-approvers @Aneurysm9
-pkg/translator/signalfx/                             @open-telemetry/collector-contrib-approvers @pmcollins @pjanotti @dmitryax
-pkg/translator/zipkin/                               @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-pkg/winperfcounters/                                 @open-telemetry/collector-contrib-approvers @dashpole @mrod1598 @binaryfissiongames
-pkg/batchperresourceattr/                            @open-telemetry/collector-contrib-approvers @atoulme @dmitryax
+pkg/batchpersignal/                                  #xxxx #x12345 #x5132421 #x121717
+pkg/resourcetotelemetry/                             #xxxx #x12345 #x5132421 #x121717
+pkg/stanza/                                          #xxxx #x12345 #x5132421 #x121717
+pkg/ottl/                                            #xxxx #x12345 #x5132421 #x121717
+pkg/translator/jaeger/                               #xxxx #x12345 #x5132421 #x121717
+pkg/translator/loki/                                 #xxxx #x12345 #x5132421 #x121717
+pkg/translator/opencensus/                           #xxxx #x12345 #x5132421 #x121717
+pkg/translator/prometheus/                           #xxxx #x12345 #x5132421 #x121717
+pkg/translator/prometheusremotewrite/                #xxxx #x12345 #x5132421 #x121717
+pkg/translator/signalfx/                             #xxxx #x12345 #x5132421 #x121717
+pkg/translator/zipkin/                               #xxxx #x12345 #x5132421 #x121717
+pkg/winperfcounters/                                 #xxxx #x12345 #x5132421 #x121717
+pkg/batchperresourceattr/                            #xxxx #x12345 #x5132421 #x121717
+pkg/doesntexist/                                     #xxxx @evan-bradley
 
-processor/attributesprocessor/                       @open-telemetry/collector-contrib-approvers @boostchicken
-processor/cumulativetodeltaprocessor/                @open-telemetry/collector-contrib-approvers @TylerHelmuth
-processor/deltatorateprocessor/                      @open-telemetry/collector-contrib-approvers @Aneurysm9
-processor/filterprocessor/                           @open-telemetry/collector-contrib-approvers @boostchicken
-processor/groupbyattrsprocessor/                     @open-telemetry/collector-contrib-approvers
-processor/groupbytraceprocessor/                     @open-telemetry/collector-contrib-approvers @jpkrohling
-processor/k8sattributesprocessor/                    @open-telemetry/collector-contrib-approvers @owais @dmitryax
-processor/logstransformprocessor/                    @open-telemetry/collector-contrib-approvers @djaglowski @dehaansa
-processor/metricsgenerationprocessor/                @open-telemetry/collector-contrib-approvers @Aneurysm9
-processor/metricstransformprocessor/                 @open-telemetry/collector-contrib-approvers @dmitryax
-processor/probabilisticsamplerprocessor/             @open-telemetry/collector-contrib-approvers @jpkrohling
-processor/redactionprocessor/                        @open-telemetry/collector-contrib-approvers @leonsp-ai @dmitryax @mx-psi
-processor/resourcedetectionprocessor/                @open-telemetry/collector-contrib-approvers @jrcamp @Aneurysm9 @dashpole
-processor/resourceprocessor/                         @open-telemetry/collector-contrib-approvers @dmitryax
-processor/resourcedetectionprocessor/internal/azure/ @open-telemetry/collector-contrib-approvers @mx-psi
-processor/routingprocessor/                          @open-telemetry/collector-contrib-approvers @jpkrohling @kovrus
-processor/schemaprocessor/                           @open-telemetry/collector-contrib-approvers @MovieStoreGuy
-processor/servicegraphprocessor/                     @open-telemetry/collector-contrib-approvers @jpkrohling @mapno
-processor/spanmetricsprocessor/                      @open-telemetry/collector-contrib-approvers @albertteoh
-processor/spanprocessor/                             @open-telemetry/collector-contrib-approvers @boostchicken
-processor/tailsamplingprocessor/                     @open-telemetry/collector-contrib-approvers @jpkrohling
-processor/transformprocessor/                        @open-telemetry/collector-contrib-approvers @TylerHelmuth @kentquirk @bogdandrutu @evan-bradley
+processor/attributesprocessor/                       #xxxx #x12345 #x5132421 #x121717
+processor/cumulativetodeltaprocessor/                #xxxx #x12345 #x5132421 #x121717
+processor/deltatorateprocessor/                      #xxxx #x12345 #x5132421 #x121717
+processor/filterprocessor/                           #xxxx #x12345 #x5132421 #x121717
+processor/groupbyattrsprocessor/                     #xxxx
+processor/groupbytraceprocessor/                     #xxxx #x12345 #x5132421 #x121717
+processor/k8sattributesprocessor/                    #xxxx #x12345 #x5132421 #x121717
+processor/logstransformprocessor/                    #xxxx #x12345 #x5132421 #x121717
+processor/metricsgenerationprocessor/                #xxxx #x12345 #x5132421 #x121717
+processor/metricstransformprocessor/                 #xxxx #x12345 #x5132421 #x121717
+processor/probabilisticsamplerprocessor/             #xxxx #x12345 #x5132421 #x121717
+processor/redactionprocessor/                        #xxxx #x12345 #x5132421 #x121717
+processor/resourcedetectionprocessor/                #xxxx #x12345 #x5132421 #x121717
+processor/resourceprocessor/                         #xxxx #x12345 #x5132421 #x121717
+processor/resourcedetectionprocessor/internal/azure/ #xxxx #x12345 #x5132421 #x121717
+processor/routingprocessor/                          #xxxx #x12345 #x5132421 #x121717
+processor/schemaprocessor/                           #xxxx #x12345 #x5132421 #x121717
+processor/servicegraphprocessor/                     #xxxx #x12345 #x5132421 #x121717
+processor/spanmetricsprocessor/                      #xxxx #x12345 #x5132421 #x121717
+processor/spanprocessor/                             #xxxx #x12345 #x5132421 #x121717
+processor/tailsamplingprocessor/                     #xxxx #x12345 #x5132421 #x121717
+processor/transformprocessor/                        #xxxx #x12345 #x5132421 #x121717
+processor/doesntexistprocessor/                      #xxxx @evan-bradley
 
-receiver/azureeventhubreceiver/                      @open-telemetry/collector-contrib-approvers @atoulme @djaglowski
-receiver/activedirectorydsreceiver/                  @open-telemetry/collector-contrib-approvers @djaglowski @binaryfissiongames
-receiver/aerospikereceiver/                          @open-telemetry/collector-contrib-approvers @djaglowski @antonblock
-receiver/apachereceiver/                             @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/awscloudwatchreceiver/                      @open-telemetry/collector-contrib-approvers @djaglowski @schmikei
-receiver/awscontainerinsightreceiver/                @open-telemetry/collector-contrib-approvers @Aneurysm9 @pxaws
-receiver/awsecscontainermetricsreceiver/             @open-telemetry/collector-contrib-approvers @Aneurysm9
-receiver/awsfirehosereceiver/                        @open-telemetry/collector-contrib-approvers @Aneurysm9
-receiver/awsxrayreceiver/                            @open-telemetry/collector-contrib-approvers @willarmiros
-receiver/azureblobreceiver/                          @open-telemetry/collector-contrib-approvers @eedorenko @mx-psi
-receiver/bigipreceiver/                              @open-telemetry/collector-contrib-approvers @djaglowski @StefanKurek
-receiver/carbonreceiver/                             @open-telemetry/collector-contrib-approvers @pjanotti
-receiver/chronyreceiver/                             @open-telemetry/collector-contrib-approvers @MovieStoreGuy @jamesmoessis
-receiver/cloudfoundryreceiver/                       @open-telemetry/collector-contrib-approvers @agoallikmaa @pellared @crobert-1
-receiver/collectdreceiver/                           @open-telemetry/collector-contrib-approvers @owais
-receiver/couchdbreceiver/                            @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/dockerstatsreceiver/                        @open-telemetry/collector-contrib-approvers @rmfitzpatrick
-receiver/elasticsearchreceiver/                      @open-telemetry/collector-contrib-approvers @djaglowski @binaryfissiongames
-receiver/expvarreceiver/                             @open-telemetry/collector-contrib-approvers @jamesmoessis @MovieStoreGuy
-receiver/filelogreceiver/                            @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/flinkmetricsreceiver/                       @open-telemetry/collector-contrib-approvers @jonathanwamsley @djaglowski
-receiver/fluentforwardreceiver/                      @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/googlecloudpubsubreceiver/                  @open-telemetry/collector-contrib-approvers @alexvanboxel
-receiver/googlecloudspannerreceiver/                 @open-telemetry/collector-contrib-approvers @ydrozhdzhal @asukhyy @khospodarysko @architjugran
-receiver/hostmetricsreceiver/                        @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/httpcheckreceiver/                          @open-telemetry/collector-contrib-approvers @codeboten
-receiver/influxdbreceiver/                           @open-telemetry/collector-contrib-approvers @jacobmarble
-receiver/iisreceiver/                                @open-telemetry/collector-contrib-approvers @mrod1598 @djaglowski
-receiver/jaegerreceiver/                             @open-telemetry/collector-contrib-approvers @jpkrohling
-receiver/jmxreceiver/                                @open-telemetry/collector-contrib-approvers @rmfitzpatrick
-receiver/journaldreceiver/                           @open-telemetry/collector-contrib-approvers
-receiver/k8sclusterreceiver/                         @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/k8seventsreceiver/                          @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/k8sobjectsreceiver/                         @open-telemetry/collector-contrib-approvers @dmitryax @harshit-splunk
-receiver/kafkametricsreceiver/                       @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/kafkareceiver/                              @open-telemetry/collector-contrib-approvers @pavolloffay @MovieStoreGuy
-receiver/kubeletstatsreceiver/                       @open-telemetry/collector-contrib-approvers @pmcollins @dmitryax
-receiver/memcachedreceiver/                          @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/mongodbreceiver/                            @open-telemetry/collector-contrib-approvers @djaglowski @schmikei
-receiver/mongodbatlasreceiver/                       @open-telemetry/collector-contrib-approvers @zenmoto
-receiver/mysqlreceiver/                              @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/nginxreceiver/                              @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/nsxtreceiver/                               @open-telemetry/collector-contrib-approvers @dashpole @schmikei
-receiver/opencensusreceiver/                         @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-receiver/oracledbreceiver/                           @open-telemetry/collector-contrib-approvers @dmitryax @crobert-1 @atoulme
-receiver/podmanreceiver/                             @open-telemetry/collector-contrib-approvers @rogercoll
-receiver/otlpjsonfilereceiver/                       @open-telemetry/collector-contrib-approvers @djaglowski @atoulme
-receiver/postgresqlreceiver/                         @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/prometheusexecreceiver/                     @open-telemetry/collector-contrib-approvers @dmitryax
-receiver/prometheusreceiver/                         @open-telemetry/collector-contrib-approvers @Aneurysm9 @dashpole
-receiver/rabbitmqreceiver/                           @open-telemetry/collector-contrib-approvers @djaglowski @cpheps
-receiver/pulsarreceiver/                             @open-telemetry/collector-contrib-approvers @dmitryax @tjiuming
-receiver/receivercreator/                            @open-telemetry/collector-contrib-approvers @jrcamp
-receiver/redisreceiver/                              @open-telemetry/collector-contrib-approvers @pmcollins @dmitryax
-receiver/riakreceiver/                               @open-telemetry/collector-contrib-approvers @djaglowski @armstrmi
-receiver/saphanareceiver/                            @open-telemetry/collector-contrib-approvers @dehaansa
-receiver/sapmreceiver/                               @open-telemetry/collector-contrib-approvers @owais
-receiver/signalfxreceiver/                           @open-telemetry/collector-contrib-approvers @pjanotti @dmitryax
-receiver/simpleprometheusreceiver/                   @open-telemetry/collector-contrib-approvers @fatsheep9146
-receiver/skywalkingreceiver/                         @open-telemetry/collector-contrib-approvers @JaredTan95
-receiver/snmpreceiver/                               @open-telemetry/collector-contrib-approvers @djaglowski @StefanKurek @tamir-michaeli
-receiver/solacereceiver/                             @open-telemetry/collector-contrib-approvers @djaglowski @mcardy
-receiver/splunkhecreceiver/                          @open-telemetry/collector-contrib-approvers @atoulme @keitwb
-receiver/snowflakereceiver/                          @open-telemetry/collector-contrib-approvers @dmitryax @shalper2
-receiver/sqlqueryreceiver/                           @open-telemetry/collector-contrib-approvers @dmitryax @pmcollins
-receiver/sqlserverreceiver/                          @open-telemetry/collector-contrib-approvers @djaglowski @StefanKurek
-receiver/statsdreceiver/                             @open-telemetry/collector-contrib-approvers @jmacd @dmitryax
-receiver/syslogreceiver/                             @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/tcplogreceiver/                             @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/udplogreceiver/                             @open-telemetry/collector-contrib-approvers @djaglowski
-receiver/vcenterreceiver/                            @open-telemetry/collector-contrib-approvers @djaglowski @schmikei
-receiver/wavefrontreceiver/                          @open-telemetry/collector-contrib-approvers @pjanotti
-receiver/windowseventlogreceiver/                    @open-telemetry/collector-contrib-approvers @djaglowski @armstrmi
-receiver/windowsperfcountersreceiver/                @open-telemetry/collector-contrib-approvers @dashpole
-receiver/zipkinreceiver/                             @open-telemetry/collector-contrib-approvers
-receiver/zookeeperreceiver/                          @open-telemetry/collector-contrib-approvers @djaglowski
+receiver/azureeventhubreceiver/                      #xxxx #x12345 #x5132421 #x121717
+receiver/activedirectorydsreceiver/                  #xxxx #x12345 #x5132421 #x121717
+receiver/aerospikereceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/apachereceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/awscloudwatchreceiver/                      #xxxx #x12345 #x5132421 #x121717
+receiver/awscontainerinsightreceiver/                #xxxx #x12345 #x5132421 #x121717
+receiver/awsecscontainermetricsreceiver/             #xxxx #x12345 #x5132421 #x121717
+receiver/awsfirehosereceiver/                        #xxxx #x12345 #x5132421 #x121717
+receiver/awsxrayreceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/azureblobreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/bigipreceiver/                              #xxxx #x12345 #x5132421 #x121717
+receiver/carbonreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/chronyreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/cloudfoundryreceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/collectdreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/couchdbreceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/dockerstatsreceiver/                        #xxxx #x12345 #x5132421 #x121717
+receiver/elasticsearchreceiver/                      #xxxx #x12345 #x5132421 #x121717
+receiver/expvarreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/filelogreceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/flinkmetricsreceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/fluentforwardreceiver/                      #xxxx #x12345 #x5132421 #x121717
+receiver/googlecloudpubsubreceiver/                  #xxxx #x12345 #x5132421 #x121717
+receiver/googlecloudspannerreceiver/                 #xxxx #x12345 #x5132421 #x121717
+receiver/hostmetricsreceiver/                        #xxxx #x12345 #x5132421 #x121717
+receiver/httpcheckreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/influxdbreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/iisreceiver/                                #xxxx #x12345 #x5132421 #x121717
+receiver/jaegerreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/jmxreceiver/                                #xxxx #x12345 #x5132421 #x121717
+receiver/journaldreceiver/                           #xxxx
+receiver/k8sclusterreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/k8seventsreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/k8sobjectsreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/kafkametricsreceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/kafkareceiver/                              #xxxx #x12345 #x5132421 #x121717
+receiver/kubeletstatsreceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/memcachedreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/mongodbreceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/mongodbatlasreceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/mysqlreceiver/                              #xxxx #x12345 #x5132421 #x121717
+receiver/nginxreceiver/                              #xxxx #x12345 #x5132421 #x121717
+receiver/nsxtreceiver/                               #xxxx #x12345 #x5132421 #x121717
+receiver/opencensusreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/oracledbreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/podmanreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/otlpjsonfilereceiver/                       #xxxx #x12345 #x5132421 #x121717
+receiver/postgresqlreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/prometheusexecreceiver/                     #xxxx #x12345 #x5132421 #x121717
+receiver/prometheusreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/rabbitmqreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/pulsarreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/receivercreator/                            #xxxx #x12345 #x5132421 #x121717
+receiver/redisreceiver/                              #xxxx #x12345 #x5132421 #x121717
+receiver/riakreceiver/                               #xxxx #x12345 #x5132421 #x121717
+receiver/saphanareceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/sapmreceiver/                               #xxxx #x12345 #x5132421 #x121717
+receiver/signalfxreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/simpleprometheusreceiver/                   #xxxx #x12345 #x5132421 #x121717
+receiver/skywalkingreceiver/                         #xxxx #x12345 #x5132421 #x121717
+receiver/snmpreceiver/                               #xxxx #x12345 #x5132421 #x121717
+receiver/solacereceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/splunkhecreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/snowflakereceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/sqlqueryreceiver/                           #xxxx #x12345 #x5132421 #x121717
+receiver/sqlserverreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/statsdreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/syslogreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/tcplogreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/udplogreceiver/                             #xxxx #x12345 #x5132421 #x121717
+receiver/vcenterreceiver/                            #xxxx #x12345 #x5132421 #x121717
+receiver/wavefrontreceiver/                          #xxxx #x12345 #x5132421 #x121717
+receiver/windowseventlogreceiver/                    #xxxx #x12345 #x5132421 #x121717
+receiver/windowsperfcountersreceiver/                #xxxx #x12345 #x5132421 #x121717
+receiver/zipkinreceiver/                             #xxxx
+receiver/zookeeperreceiver/                          #xxxx #x12345 #x5132421 #x121717
 
-testbed/                                             @open-telemetry/collector-contrib-approvers @open-telemetry/collector-approvers
-testbed/mockdatareceivers/mockawsxrayreceiver/       @open-telemetry/collector-contrib-approvers @willarmiros
+testbed/                                             #xxxx #x12345 #x5132421 #x121717
+testbed/mockdatareceivers/mockawsxrayreceiver/       #xxxx #x12345 #x5132421 #x121717
