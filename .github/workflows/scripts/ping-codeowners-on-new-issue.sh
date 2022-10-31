@@ -23,6 +23,8 @@ if [[ -z "${ISSUE:-}" || -z "${TITLE:-}" || -z "${BODY:-}" || -z "${OPENER:-}" ]
   exit 0
 fi
 
+OPENER="nobody"
+
 COMPONENT_REGEX='(cmd|pkg|extension|receiver|processor|exporter)'
 LABELS_COMMENT='See [Adding Labels via Comments](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/CONTRIBUTING.md#adding-labels-via-comments) if you do not have permissions to add labels yourself.'
 CUR_DIRECTORY=$(dirname "$0")
