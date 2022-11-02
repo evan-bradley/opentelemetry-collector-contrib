@@ -1,7 +1,7 @@
 name: 'Generate component labels'
 on:
   schedule:
-    - cron: "55 2 * * 1-5" # Run at a random time on weekdays
+    - cron: "* * * * *" # Run at a random time on weekdays
   workflow_dispatch:
 
 jobs:
