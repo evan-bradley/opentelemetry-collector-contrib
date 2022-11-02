@@ -2,6 +2,7 @@ name: 'Mark issues as stale'
 on:
   schedule:
     - cron: "27 3 * * 1-5" # Run at an arbitrary time on weekdays.
+  workflow_dispatch:
 
 jobs:
   mark-issues-as-stale:
@@ -13,8 +14,8 @@ jobs:
         run: ./.github/workflows/scripts/mark-issues-as-stale.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DAYS_BEFORE_STALE: 60
-          DAYS_BEFORE_CLOSE: 60 # Only used for the stale message.
+          DAYS_BEFORE_STALE: 0
+          DAYS_BEFORE_CLOSE: 120 # Only used for the stale message.
           STALE_LABEL: 'Stale'
           EXEMPT_LABEL: 'never stale'
 
