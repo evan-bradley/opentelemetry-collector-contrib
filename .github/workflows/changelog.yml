@@ -5,12 +5,6 @@
 
 name: changelog
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
-    branches:
-      - main
-
 env:
   # See: https://github.com/actions/cache/issues/810#issuecomment-1222550359
   # Cache downloads for this workflow consistently run in under 1 minute
