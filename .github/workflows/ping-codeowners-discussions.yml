@@ -1,0 +1,17 @@
+name: 'Ping code owners on discussions'
+on:
+  discussion:
+    types: [labeled]
+
+jobs:
+  ping-owners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+    
+      - name: Run ping-codeowners-discussions.sh
+        run: ./.github/workflows/scripts/ping-codeowners-discussions.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCUSSION: ${{ github.event.discussion.number }}
+          COMPONENT: ${{ github.event.label.name }}
