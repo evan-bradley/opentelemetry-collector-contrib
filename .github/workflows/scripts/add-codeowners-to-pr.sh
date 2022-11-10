@@ -97,12 +97,14 @@ main () {
     # The GitHub API validates that authors are not requested to review, but
     # accepts duplicate logins and logins that are already reviewers.
     curl \
-        -q \
+        --fail \
         -X POST \
         -H "Accept: application/vnd.github+json" \
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         "https://api.github.com/repos/${REPO}/pulls/${PR}/requested_reviewers" \
-        -d "{\"reviewers\":[${REVIEWERS}]}"
+        -d "{\"reviewers\":[${REVIEWERS}]}" \
+        | jq ".message" \
+        || echo "Failed to add reviewers to #${PR}"
 }
 
 main || echo "Failed to run $0"
