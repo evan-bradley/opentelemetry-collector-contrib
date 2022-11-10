@@ -11,6 +11,12 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' && startsWith(github.repository, 'open-telemetry/') }}
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Test
+        run: echo "Owner ${REPOSITORY_OWNER}, Repo ${REPOSITORY}"
+        env:
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY: ${{ github.repository }}
 
       - name: Run add-codeowners-to-pr.sh
         run: ./.github/workflows/scripts/add-codeowners-to-pr.sh
