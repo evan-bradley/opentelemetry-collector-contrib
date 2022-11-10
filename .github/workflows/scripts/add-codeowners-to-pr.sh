@@ -64,7 +64,7 @@ main () {
                 if [[ -n "${REVIEWERS}" ]]; then
                     REVIEWERS+=","
                 fi
-                REVIEWERS+="$(echo "${OWNERS}" | sed 's/@//g' | sed 's/ /,/g')"
+                REVIEWERS+="$(echo "${OWNERS}" | sed -E 's/@(.+) /"\1"/g' | sed 's/@//g' | sed 's/ /,/g')"
             fi
 
             # Convert the CODEOWNERS entry to a label
@@ -79,11 +79,17 @@ main () {
         done
     done
 
-    gh pr edit "${PR}" --add-label "${LABELS}" || echo "Failed to add labels to #${PR}"
+    # gh pr edit "${PR}" --add-label "${LABELS}" || echo "Failed to add labels to #${PR}"
 
     # Note that adding the labels above will not trigger any other workflows to
     # add code owners, so we have to do it here.
-    gh pr edit "${PR}" --add-reviewer "${REVIEWERS}" || echo "Failed to add reviewers to #${PR}"
+    # gh pr edit "${PR}" --add-reviewer "${REVIEWERS}" || echo "Failed to add reviewers to #${PR}"
+    curl \
+        -X POST \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        "https://api.github.com/repos/evan-bradley/opentelemetry-collector-contrib/pulls/${PR}/requested_reviewers" \
+        -d "{\"reviewers\":[${REVIEWERS}]}"
 }
 
 main || echo "Failed to run $0"
