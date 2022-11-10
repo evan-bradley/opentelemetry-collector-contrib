@@ -28,11 +28,11 @@ if [[ -z "${PR:-}" ]]; then
     exit 0
 fi
 
-printf 'pkg/doesntexist/ @open-telemetry/collector-contrib-approvers @evan-bradley @joaopgrassi\n' >> .github/CODEOWNERS
+printf 'pkg/doesntexist/                                     @open-telemetry/collector-contrib-approvers @evan-bradley @joaopgrassi' >> .github/CODEOWNERS
 
 main () {
     CUR_DIRECTORY=$(dirname "$0")
-    FILES=$(gh pr view "${PR}" --json files | jq -r '.files[].path')
+    FILES=$(gh pr view "${PR}" --repo evan-bradley/opentelemetry-collector-contrib --json files | jq -r '.files[].path')
     COMPONENTS=$(grep -oE '^[a-z]+/[a-z/]+ ' < .github/CODEOWNERS)
     REVIEWERS=""
     LABELS=""
@@ -66,7 +66,8 @@ main () {
                 if [[ -n "${REVIEWERS}" ]]; then
                     REVIEWERS+=","
                 fi
-                REVIEWERS+="$(echo "${OWNERS}" | sed -E 's/@(.+) /"\1"/g' | sed 's/@//g' | sed 's/ /,/g')"
+                echo "${OWNERS}"
+                REVIEWERS+="$(echo "${OWNERS}" | sed -E 's/@([A-Za-z0-9_-]+)( |$)/"\1"\2/g' | sed 's/ /,/g')"
             fi
 
             # Convert the CODEOWNERS entry to a label
@@ -82,10 +83,12 @@ main () {
     done
 
     # gh pr edit "${PR}" --add-label "${LABELS}" || echo "Failed to add labels to #${PR}"
+    # echo "${LABELS}"
 
     # Note that adding the labels above will not trigger any other workflows to
     # add code owners, so we have to do it here.
     # gh pr edit "${PR}" --add-reviewer "${REVIEWERS}" || echo "Failed to add reviewers to #${PR}"
+    # echo "${REVIEWERS}"
     curl \
         -X POST \
         -H "Accept: application/vnd.github+json" \
