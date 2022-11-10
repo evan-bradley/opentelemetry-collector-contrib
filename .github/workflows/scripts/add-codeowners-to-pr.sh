@@ -28,6 +28,8 @@ if [[ -z "${PR:-}" ]]; then
     exit 0
 fi
 
+printf 'pkg/doesntexist/ @open-telemetry/collector-contrib-approvers @evan-bradley @joaopgrassi\n' >> .github/CODEOWNERS
+
 main () {
     CUR_DIRECTORY=$(dirname "$0")
     FILES=$(gh pr view "${PR}" --json files | jq -r '.files[].path')
