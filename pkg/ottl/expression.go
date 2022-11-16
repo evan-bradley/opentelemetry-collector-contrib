@@ -16,6 +16,7 @@ package ottl // import "github.com/open-telemetry/opentelemetry-collector-contri
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -115,9 +116,72 @@ func (p *Parser[K]) newGetter(val value) (Getter[K], error) {
 		}
 	}
 
+	if val.List != nil {
+		list := make([]any, len(val.List.Values))
+		for i, v := range val.List.Values {
+			getter, err := p.newGetter(v)
+			if err != nil {
+				return nil, err
+			}
+			literal, ok := getter.(*literal[K])
+			if !ok {
+				return nil, errors.New("a non-literal value was used in a Getter list literal")
+			}
+			list[i] = literal.value
+		}
+		typedList, err := convertSliceType(list)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create slice for Getter list literal: %w", err)
+		}
+
+		return &literal[K]{value: typedList}, nil
+	}
+
 	if val.MathExpression == nil {
 		// In practice, can't happen since the DSL grammar guarantees one is set
 		return nil, fmt.Errorf("no value field set. This is a bug in the OpenTelemetry Transformation Language")
 	}
 	return p.evaluateMathExpression(val.MathExpression)
+}
+
+// convertSliceType converts a slice with potentially heterogeneous
+// types to a slice with a defined type. If the slice does have
+// heterogeneous types, an error is returned.
+//
+// Most arrays are intended to be homogeneous according to the
+// OpenTelemetry specification, so we apply the same restriction here.
+func convertSliceType(untypedSlice []any) (any, error) {
+	if len(untypedSlice) == 0 {
+		return untypedSlice, nil
+	}
+
+	switch untypedSlice[0].(type) {
+	case string:
+		return convertSlice[string](untypedSlice)
+	case int64:
+		return convertSlice[int64](untypedSlice)
+	case float64:
+		return convertSlice[float64](untypedSlice)
+	case bool:
+		return convertSlice[bool](untypedSlice)
+	case []byte:
+		return convertSlice[[]byte](untypedSlice)
+	default:
+		return nil, errors.New("unsupported list type")
+	}
+}
+
+func convertSlice[K any](inputSlice []any) ([]K, error) {
+	outputSlice := make([]K, len(inputSlice))
+	for i, val := range inputSlice {
+		typedVal, ok := val.(K)
+
+		if !ok {
+			return nil, errors.New("elements of multiple types exist within the list")
+		}
+
+		outputSlice[i] = typedVal
+	}
+
+	return outputSlice, nil
 }

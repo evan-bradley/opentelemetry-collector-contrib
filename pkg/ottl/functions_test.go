@@ -82,6 +82,28 @@ func Test_NewFunctionCall_invalid(t *testing.T) {
 			},
 		},
 		{
+			name: "getter arg with heterogeneous list",
+			inv: invocation{
+				Function: "testing_getter",
+				Arguments: []value{
+					{
+						List: &list{
+							Values: []value{
+								{
+									String: ottltest.Strp("test"),
+								},
+								{
+									Literal: &mathExprLiteral{
+										Int: ottltest.Intp(1),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "not enough args",
 			inv: invocation{
 				Function: "testing_multiple_args",
@@ -510,6 +532,27 @@ func Test_NewFunctionCall(t *testing.T) {
 				Arguments: []value{
 					{
 						IsNil: (*isNil)(ottltest.Boolp(true)),
+					},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "getter arg with homogeneous list",
+			inv: invocation{
+				Function: "testing_getter",
+				Arguments: []value{
+					{
+						List: &list{
+							Values: []value{
+								{
+									String: ottltest.Strp("test"),
+								},
+								{
+									String: ottltest.Strp("test"),
+								},
+							},
+						},
 					},
 				},
 			},
