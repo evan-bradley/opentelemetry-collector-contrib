@@ -26,13 +26,13 @@ import (
 func Test_split(t *testing.T) {
 	tests := []struct {
 		name      string
-		target    ottl.Getter[interface{}]
+		target    ottl.StringGetter[interface{}]
 		delimiter string
 		expected  interface{}
 	}{
 		{
 			name: "split string",
-			target: &ottl.StandardGetSetter[interface{}]{
+			target: &ottl.StandardTypeGetter[interface{}, string]{
 				Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 					return "A|B|C", nil
 				},
@@ -42,7 +42,7 @@ func Test_split(t *testing.T) {
 		},
 		{
 			name: "split empty string",
-			target: &ottl.StandardGetSetter[interface{}]{
+			target: &ottl.StandardTypeGetter[interface{}, string]{
 				Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 					return "", nil
 				},
@@ -52,7 +52,7 @@ func Test_split(t *testing.T) {
 		},
 		{
 			name: "split empty delimiter",
-			target: &ottl.StandardGetSetter[interface{}]{
+			target: &ottl.StandardTypeGetter[interface{}, string]{
 				Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 					return "A|B|C", nil
 				},
@@ -62,7 +62,7 @@ func Test_split(t *testing.T) {
 		},
 		{
 			name: "split empty string and empty delimiter",
-			target: &ottl.StandardGetSetter[interface{}]{
+			target: &ottl.StandardTypeGetter[interface{}, string]{
 				Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 					return "", nil
 				},
@@ -72,7 +72,7 @@ func Test_split(t *testing.T) {
 		},
 		{
 			name: "split non-string",
-			target: &ottl.StandardGetSetter[interface{}]{
+			target: &ottl.StandardTypeGetter[interface{}, string]{
 				Getter: func(ctx context.Context, tCtx interface{}) (interface{}, error) {
 					return 123, nil
 				},

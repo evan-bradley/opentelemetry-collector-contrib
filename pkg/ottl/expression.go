@@ -21,12 +21,42 @@ import (
 
 type ExprFunc[K any] func(ctx context.Context, tCtx K) (interface{}, error)
 
+type ExprI[K any] interface {
+	ExprFunc() ExprFunc[K]
+	Eval(ctx context.Context, tCtx K) (interface{}, error)
+}
+
 type Expr[K any] struct {
 	exprFunc ExprFunc[K]
 }
 
 func (e Expr[K]) Eval(ctx context.Context, tCtx K) (interface{}, error) {
 	return e.exprFunc(ctx, tCtx)
+}
+
+func (e Expr[K]) ExprFunc() ExprFunc[K] {
+	return e.exprFunc
+}
+
+type StaticExpr[K any] struct {
+	exprFunc ExprFunc[K]
+}
+
+func (e StaticExpr[K]) Eval(ctx context.Context, tCtx K) (interface{}, error) {
+	return e.exprFunc(ctx, tCtx)
+}
+
+func (e StaticExpr[K]) ExprFunc() ExprFunc[K] {
+	return e.exprFunc
+}
+
+func (e StaticExpr[K]) GetStatic() (any, error) {
+	var x K
+	res, err := e.exprFunc(context.Background(), x)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 type Getter[K any] interface {
@@ -55,6 +85,10 @@ func (path StandardGetSetter[K]) Set(ctx context.Context, tCtx K, val interface{
 	return path.Setter(ctx, tCtx, val)
 }
 
+type StaticGetter interface {
+	GetStatic() (any, error)
+}
+
 type literal[K any] struct {
 	value interface{}
 }
@@ -63,8 +97,12 @@ func (l literal[K]) Get(context.Context, K) (interface{}, error) {
 	return l.value, nil
 }
 
+func (l literal[K]) GetStatic() (any, error) {
+	return l.value, nil
+}
+
 type exprGetter[K any] struct {
-	expr Expr[K]
+	expr ExprI[K]
 }
 
 func (g exprGetter[K]) Get(ctx context.Context, tCtx K) (interface{}, error) {
@@ -101,6 +139,29 @@ type StandardTypeGetter[K any, T any] struct {
 	Getter func(ctx context.Context, tCtx K) (interface{}, error)
 }
 
+type StaticTypeGetter[K any, T any] struct {
+	value *T
+}
+
+func NewStandardTypeGetter[K any, T any](getter Getter[K]) (any, error) {
+	if sg, ok := getter.(StaticGetter); ok {
+		val, err := sg.GetStatic()
+		if err != nil {
+			return StandardTypeGetter[K, T]{}, err
+		}
+		if val == nil {
+			return StaticTypeGetter[K, T]{value: nil}, nil
+		}
+		v, ok := val.(T)
+		if !ok {
+			return nil, fmt.Errorf("expected %T but got %T", v, val)
+		}
+		return StaticTypeGetter[K, T]{value: &v}, nil
+	}
+
+	return StandardTypeGetter[K, T]{Getter: getter.Get}, nil
+}
+
 func (g StandardTypeGetter[K, T]) Get(ctx context.Context, tCtx K) (*T, error) {
 	val, err := g.Getter(ctx, tCtx)
 	if err != nil {
@@ -114,6 +175,14 @@ func (g StandardTypeGetter[K, T]) Get(ctx context.Context, tCtx K) (*T, error) {
 		return nil, fmt.Errorf("expected %T but got %T", v, val)
 	}
 	return &v, nil
+}
+
+func (g StaticTypeGetter[K, T]) Get(context.Context, K) (*T, error) {
+	return g.value, nil
+}
+
+func (g StaticTypeGetter[K, T]) GetStatic() (any, error) {
+	return g.value, nil
 }
 
 func (p *Parser[K]) newGetter(val value) (Getter[K], error) {
@@ -156,6 +225,15 @@ func (p *Parser[K]) newGetter(val value) (Getter[K], error) {
 			})
 			if err != nil {
 				return nil, err
+			}
+			if sc, ok := call.(StaticGetter); ok {
+				res, err := sc.GetStatic()
+				if err != nil {
+					return nil, err
+				}
+				return &literal[K]{
+					value: res,
+				}, nil
 			}
 			return &exprGetter[K]{
 				expr: call,

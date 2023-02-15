@@ -27,7 +27,7 @@ type EnumParser func(*EnumSymbol) (*Enum, error)
 
 type Enum int64
 
-func (p *Parser[K]) newFunctionCall(inv invocation) (Expr[K], error) {
+func (p *Parser[K]) newFunctionCall(inv invocation) (ExprI[K], error) {
 	f, ok := p.functions[inv.Function]
 	if !ok {
 		return Expr[K]{}, fmt.Errorf("undefined function %v", inv.Function)
@@ -43,6 +43,10 @@ func (p *Parser[K]) newFunctionCall(inv invocation) (Expr[K], error) {
 		err = nil
 	} else {
 		err = returnVals[1].Interface().(error)
+	}
+
+	if checkIfArgsAllStatic(args) {
+		return StaticExpr[K]{exprFunc: returnVals[0].Interface().(ExprFunc[K])}, err
 	}
 
 	return Expr[K]{exprFunc: returnVals[0].Interface().(ExprFunc[K])}, err
@@ -156,7 +160,11 @@ func (p *Parser[K]) buildArg(argVal value, argType reflect.Type) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		return StandardTypeGetter[K, string]{Getter: arg.Get}, nil
+		getter, err := NewStandardTypeGetter[K, string](arg)
+		if err != nil {
+			return nil, err
+		}
+		return getter, nil
 	case strings.HasPrefix(name, "IntGetter"):
 		arg, err := p.newGetter(argVal)
 		if err != nil {
@@ -228,4 +236,29 @@ func buildSlice[T any](argVal value, argType reflect.Type, buildArg buildArgFunc
 	}
 
 	return vals, nil
+}
+
+func checkIfArgsAllStatic(args []reflect.Value) bool {
+	for _, arg := range args {
+		if _, ok := arg.Interface().(StaticGetter); !ok {
+			argType := arg.Type()
+			var name string
+			if argType.Kind() == reflect.Slice {
+				name = argType.Elem().Name()
+			} else {
+				name = argType.Name()
+			}
+
+			switch name {
+			case reflect.String.String():
+			case reflect.Float64.String():
+			case reflect.Int64.String():
+			case reflect.Bool.String():
+			default:
+				return false
+			}
+		}
+	}
+
+	return true
 }
