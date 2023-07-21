@@ -19,10 +19,15 @@ const (
 )
 
 type ReplaceAllPatternsArguments[K any] struct {
-	Target       ottl.PMapGetter[K]   `ottlarg:"0"`
-	Mode         string               `ottlarg:"1"`
-	RegexPattern string               `ottlarg:"2"`
-	Replacement  ottl.StringGetter[K] `ottlarg:"3"`
+	Target       ottl.PMapGetter[K]     `ottlarg:"0"`
+	Mode         string                 `ottlarg:"1"`
+	RegexPattern string                 `ottlarg:"2"`
+	Replacement  ottl.StringGetter[K]   `ottlarg:"3"`
+	Func         ottl.FunctionGetter[K] `ottlarg:"4"`
+}
+
+type ReplacementFuncArgs[K any] struct {
+	Input ottl.StringGetter[K] `ottlarg:"0"`
 }
 
 func NewReplaceAllPatternsFactory[K any]() ottl.Factory[K] {
@@ -36,10 +41,12 @@ func createReplaceAllPatternsFunction[K any](_ ottl.FunctionContext, oArgs ottl.
 		return nil, fmt.Errorf("ReplaceAllPatternsFactory args must be of type *ReplaceAllPatternsArguments[K]")
 	}
 
-	return replaceAllPatterns(args.Target, args.Mode, args.RegexPattern, args.Replacement)
+	fn, _ := args.Func.Get(context.Background(), &ReplacementFuncArgs[K]{Input: args.Replacement})
+
+	return replaceAllPatterns(args.Target, args.Mode, args.RegexPattern, args.Replacement, fn)
 }
 
-func replaceAllPatterns[K any](target ottl.PMapGetter[K], mode string, regexPattern string, replacement ottl.StringGetter[K]) (ottl.ExprFunc[K], error) {
+func replaceAllPatterns[K any](target ottl.PMapGetter[K], mode string, regexPattern string, replacement ottl.StringGetter[K], fn ottl.Expr[K]) (ottl.ExprFunc[K], error) {
 	compiledPattern, err := regexp.Compile(regexPattern)
 	if err != nil {
 		return nil, fmt.Errorf("the regex pattern supplied to replace_all_patterns is not a valid pattern: %w", err)
@@ -53,7 +60,7 @@ func replaceAllPatterns[K any](target ottl.PMapGetter[K], mode string, regexPatt
 		if err != nil {
 			return nil, err
 		}
-		replacementVal, err := replacement.Get(ctx, tCtx)
+		replacementVal, err := fn.Eval(ctx, tCtx)
 		if err != nil {
 			return nil, err
 		}
@@ -63,14 +70,14 @@ func replaceAllPatterns[K any](target ottl.PMapGetter[K], mode string, regexPatt
 			switch mode {
 			case modeValue:
 				if compiledPattern.MatchString(originalValue.Str()) {
-					updatedString := compiledPattern.ReplaceAllString(originalValue.Str(), replacementVal)
+					updatedString := compiledPattern.ReplaceAllString(originalValue.Str(), replacementVal.(string))
 					updated.PutStr(key, updatedString)
 				} else {
 					originalValue.CopyTo(updated.PutEmpty(key))
 				}
 			case modeKey:
 				if compiledPattern.MatchString(key) {
-					updatedKey := compiledPattern.ReplaceAllString(key, replacementVal)
+					updatedKey := compiledPattern.ReplaceAllString(key, replacementVal.(string))
 					originalValue.CopyTo(updated.PutEmpty(updatedKey))
 				} else {
 					originalValue.CopyTo(updated.PutEmpty(key))

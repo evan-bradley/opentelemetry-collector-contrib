@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
@@ -113,6 +114,45 @@ func (g exprGetter[K]) Get(ctx context.Context, tCtx K) (interface{}, error) {
 		}
 	}
 	return result, nil
+}
+
+// FunctionGetter is a Getter that returns a function ready for evaluation.
+type FunctionGetter[K any] interface {
+	// Get takes a set of arguments and returns a function with those arguments set.
+	Get(ctx context.Context, iArgs Arguments) (Expr[K], error)
+}
+
+type functionGetter[K any] struct {
+	fCtx FunctionContext
+	fact Factory[K]
+}
+
+// Get takes args from an "interface" declared by the calling OTTL function
+// and applies them to the factory arguments to create a function.
+func (f functionGetter[K]) Get(ctx context.Context, iArgs Arguments) (Expr[K], error) {
+	fArgs := f.fact.CreateDefaultArguments()
+	fArgsVal := reflect.ValueOf(fArgs).Elem()
+	iArgsVal := reflect.ValueOf(iArgs).Elem()
+
+	for i := 0; i < iArgsVal.NumField(); i++ {
+		field := iArgsVal.Field(i)
+
+		// TODO: Validate the argument lengths, types, etc. here.
+		fArgsVal.Field(i).Set(field)
+	}
+	fn, err := f.fact.CreateFunction(f.fCtx, fArgs)
+	if err != nil {
+		return Expr[K]{}, fmt.Errorf("couldn't create function: %w", err)
+	}
+
+	return Expr[K]{exprFunc: fn}, nil
+}
+
+func NewFunctionGetter[K any](fCtx FunctionContext, fact Factory[K]) functionGetter[K] {
+	return functionGetter[K]{
+		fCtx: fCtx,
+		fact: fact,
+	}
 }
 
 type listGetter[K any] struct {

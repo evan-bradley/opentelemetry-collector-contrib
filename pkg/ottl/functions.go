@@ -77,7 +77,17 @@ func (p *Parser[K]) buildArgs(ed editor, argsVal reflect.Value) error {
 		argVal := ed.Arguments[argNum]
 
 		var val any
-		if fieldType.Kind() == reflect.Slice {
+		if strings.HasPrefix(fieldType.Name(), "FunctionGetter") {
+			f, ok := p.functions[string(*argVal.Enum)]
+			if !ok {
+				return fmt.Errorf("undefined function %q", ed.Function)
+			}
+			val = NewFunctionGetter[K](FunctionContext{Set: p.telemetrySettings}, f)
+
+			if err != nil {
+				return err
+			}
+		} else if fieldType.Kind() == reflect.Slice {
 			val, err = p.buildSliceArg(argVal, fieldType)
 		} else {
 			val, err = p.buildArg(argVal, fieldType)
