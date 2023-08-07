@@ -42,71 +42,95 @@ type SumCountDataPoint interface {
 	Timestamp() pcommon.Timestamp
 }
 
+type HasSumDataPoint interface {
+	HasSum() bool
+}
+
 func extractSumMetric(monotonic bool) (ottl.ExprFunc[ottlmetric.TransformContext], error) {
 	return func(_ context.Context, tCtx ottlmetric.TransformContext) (interface{}, error) {
-		var aggTemp pmetric.AggregationTemporality
-		metric := tCtx.GetMetric()
-		invalidMetricTypeError := fmt.Errorf("extract_sum_metric requires an input metric of type Histogram, ExponentialHistogram or Summary, got %s", metric.Type())
-
-		switch metric.Type() {
-		case pmetric.MetricTypeHistogram:
-			aggTemp = metric.Histogram().AggregationTemporality()
-		case pmetric.MetricTypeExponentialHistogram:
-			aggTemp = metric.ExponentialHistogram().AggregationTemporality()
-		case pmetric.MetricTypeSummary:
-			// Summaries don't have an aggregation temporality, but they *should* be cumulative based on the Openmetrics spec.
-			// This should become an optional argument once those are available in OTTL.
-			aggTemp = pmetric.AggregationTemporalityCumulative
-		default:
-			return nil, invalidMetricTypeError
-		}
-
-		sumMetric := pmetric.NewMetric()
-		sumMetric.SetDescription(metric.Description())
-		sumMetric.SetName(metric.Name() + "_sum")
-		sumMetric.SetUnit(metric.Unit())
-		sumMetric.SetEmptySum().SetAggregationTemporality(aggTemp)
-		sumMetric.Sum().SetIsMonotonic(monotonic)
-
-		switch metric.Type() {
-		case pmetric.MetricTypeHistogram:
-			dataPoints := metric.Histogram().DataPoints()
-			for i := 0; i < dataPoints.Len(); i++ {
-				dataPoint := dataPoints.At(i)
-				if dataPoint.HasSum() {
-					addSumDataPoint(dataPoint, sumMetric.Sum().DataPoints())
-				}
-			}
-		case pmetric.MetricTypeExponentialHistogram:
-			dataPoints := metric.ExponentialHistogram().DataPoints()
-			for i := 0; i < dataPoints.Len(); i++ {
-				dataPoint := dataPoints.At(i)
-				if dataPoint.HasSum() {
-					addSumDataPoint(dataPoint, sumMetric.Sum().DataPoints())
-				}
-			}
-		case pmetric.MetricTypeSummary:
-			dataPoints := metric.Summary().DataPoints()
-			// note that unlike Histograms, the Sum field is required for Summaries
-			for i := 0; i < dataPoints.Len(); i++ {
-				addSumDataPoint(dataPoints.At(i), sumMetric.Sum().DataPoints())
-			}
-		default:
-			return nil, invalidMetricTypeError
-		}
-
-		if sumMetric.Sum().DataPoints().Len() > 0 {
-			sumMetric.MoveTo(tCtx.GetMetrics().AppendEmpty())
-		}
-
-		return nil, nil
+		return nil, extractDP(tCtx, addSumDataPoint, monotonic, "_sum")
 	}, nil
 }
 
 func addSumDataPoint(dataPoint SumCountDataPoint, destination pmetric.NumberDataPointSlice) {
+	if hs, ok := dataPoint.(HasSumDataPoint); ok && !hs.HasSum() {
+		return
+	}
 	newDp := destination.AppendEmpty()
 	dataPoint.Attributes().CopyTo(newDp.Attributes())
 	newDp.SetDoubleValue(dataPoint.Sum())
 	newDp.SetStartTimestamp(dataPoint.StartTimestamp())
 	newDp.SetTimestamp(dataPoint.Timestamp())
+}
+
+func extractCountMetric(monotonic bool) (ottl.ExprFunc[ottlmetric.TransformContext], error) {
+	return func(_ context.Context, tCtx ottlmetric.TransformContext) (interface{}, error) {
+		return nil, extractDP(tCtx, addCountDataPoint, monotonic, "_count")
+	}, nil
+}
+
+func extractDP(tCtx ottlmetric.TransformContext, fillDataPoint func(dataPoint SumCountDataPoint, destination pmetric.NumberDataPointSlice), monotonic bool, suffix string) error {
+	metric := tCtx.GetMetric()
+	invalidMetricTypeError := fmt.Errorf("input metric must be of type Histogram, ExponentialHistogram or Summary, got %s", metric.Type())
+
+	aggTemp := getAggregationTemporality(metric)
+	if aggTemp == pmetric.AggregationTemporalityUnspecified {
+		return invalidMetricTypeError
+	}
+
+	countMetric := pmetric.NewMetric()
+	countMetric.SetDescription(metric.Description())
+	countMetric.SetName(metric.Name() + suffix)
+	countMetric.SetUnit(metric.Unit())
+	countMetric.SetEmptySum().SetAggregationTemporality(aggTemp)
+	countMetric.Sum().SetIsMonotonic(monotonic)
+
+	switch metric.Type() {
+	case pmetric.MetricTypeHistogram:
+		dataPoints := metric.Histogram().DataPoints()
+		for i := 0; i < dataPoints.Len(); i++ {
+			fillDataPoint(dataPoints.At(i), countMetric.Sum().DataPoints())
+		}
+	case pmetric.MetricTypeExponentialHistogram:
+		dataPoints := metric.ExponentialHistogram().DataPoints()
+		for i := 0; i < dataPoints.Len(); i++ {
+			fillDataPoint(dataPoints.At(i), countMetric.Sum().DataPoints())
+		}
+	case pmetric.MetricTypeSummary:
+		dataPoints := metric.Summary().DataPoints()
+		for i := 0; i < dataPoints.Len(); i++ {
+			fillDataPoint(dataPoints.At(i), countMetric.Sum().DataPoints())
+		}
+	default:
+		return invalidMetricTypeError
+	}
+
+	if countMetric.Sum().DataPoints().Len() > 0 {
+		countMetric.MoveTo(tCtx.GetMetrics().AppendEmpty())
+	}
+
+	return nil
+}
+
+func addCountDataPoint(dataPoint SumCountDataPoint, destination pmetric.NumberDataPointSlice) {
+	newDp := destination.AppendEmpty()
+	dataPoint.Attributes().CopyTo(newDp.Attributes())
+	newDp.SetIntValue(int64(dataPoint.Count()))
+	newDp.SetStartTimestamp(dataPoint.StartTimestamp())
+	newDp.SetTimestamp(dataPoint.Timestamp())
+}
+
+func getAggregationTemporality(metric pmetric.Metric) pmetric.AggregationTemporality {
+	switch metric.Type() {
+	case pmetric.MetricTypeHistogram:
+		return metric.Histogram().AggregationTemporality()
+	case pmetric.MetricTypeExponentialHistogram:
+		return metric.ExponentialHistogram().AggregationTemporality()
+	case pmetric.MetricTypeSummary:
+		// Summaries don't have an aggregation temporality, but they *should* be cumulative based on the Openmetrics spec.
+		// This should become an optional argument once those are available in OTTL.
+		return pmetric.AggregationTemporalityCumulative
+	default:
+		return pmetric.AggregationTemporalityUnspecified
+	}
 }
