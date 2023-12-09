@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"runtime"
 	"sort"
@@ -24,15 +25,15 @@ import (
 	"github.com/open-telemetry/opamp-go/client"
 	"github.com/open-telemetry/opamp-go/client/types"
 	"github.com/open-telemetry/opamp-go/protobufs"
+	"github.com/open-telemetry/opamp-go/server"
+	serverTypes "github.com/open-telemetry/opamp-go/server/types"
+	semconv "go.opentelemetry.io/collector/semconv/v1.18.0"
 	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/commander"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/config"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/healthchecker"
 )
-
-// This Supervisor is developed specifically for the OpenTelemetry Collector.
-const agentType = "io.opentelemetry.collector"
 
 // Supervisor implements supervising of OpenTelemetry Collector and uses OpAMPClient
 // to work with an OpAMP Server.
@@ -51,8 +52,13 @@ type Supervisor struct {
 	// Supervisor's own config.
 	config config.Supervisor
 
+	agentDescription *protobufs.AgentDescription
+
 	// Agent's instance id.
 	instanceID ulid.ULID
+
+	// The name of the agent.
+	agentName string
 
 	// The version of the agent.
 	agentVersion string
@@ -82,6 +88,10 @@ type Supervisor struct {
 	// The OpAMP client to connect to the OpAMP Server.
 	opampClient client.OpAMPClient
 
+	// The OpAMP server to communicate with the Collector's OpAMP extension
+	opampServer     server.OpAMPServer
+	opampServerPort int
+
 	shuttingDown bool
 
 	agentHasStarted               bool
@@ -101,6 +111,14 @@ func NewSupervisor(logger *zap.Logger, configFile string) (*Supervisor, error) {
 		return nil, fmt.Errorf("error loading config: %w", err)
 	}
 
+	id, err := s.createInstanceID()
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.instanceID = id
+
 	if err := s.getBootstrapInfo(); err != nil {
 		s.logger.Error("Couldn't get agent version", zap.Error(err))
 	}
@@ -113,16 +131,8 @@ func NewSupervisor(logger *zap.Logger, configFile string) (*Supervisor, error) {
 
 	s.agentHealthCheckEndpoint = fmt.Sprintf("localhost:%d", port)
 
-	id, err := s.createInstanceID()
-
-	if err != nil {
-		return nil, err
-	}
-
-	s.instanceID = id
-
 	logger.Debug("Supervisor starting",
-		zap.String("id", s.instanceID.String()), zap.String("type", agentType), zap.String("version", s.agentVersion))
+		zap.String("id", s.instanceID.String()), zap.String("name", s.agentName), zap.String("version", s.agentVersion))
 
 	s.loadAgentEffectiveConfig()
 
@@ -166,10 +176,120 @@ func (s *Supervisor) loadConfig(configFile string) error {
 	return nil
 }
 
-// TODO: Implement bootstrapping https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/21071
-// nolint: unparam
 func (s *Supervisor) getBootstrapInfo() (err error) {
-	s.agentVersion = "1.0.0"
+	port, err := s.findRandomPort()
+
+	if err != nil {
+		return err
+	}
+
+	supervisorPort, err := s.findRandomPort()
+
+	if err != nil {
+		return err
+	}
+
+	cfg := fmt.Sprintf(`
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: "localhost:%d"
+exporters:
+  debug:
+    verbosity: basic
+
+extensions:
+  opamp:
+    instance_uid: %s
+    server:
+      ws:
+        endpoint: "ws://localhost:%d/v1/opamp"
+        tls:
+          insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]
+  extensions: [opamp]
+`,
+		port,
+		s.instanceID.String(),
+		supervisorPort,
+	)
+
+	s.writeEffectiveConfigToFile(cfg, s.effectiveConfigFilePath)
+
+	srv := server.New(s.logger.Sugar())
+
+	done := make(chan struct{}, 1)
+
+	srv.Start(server.StartSettings{
+		Settings: server.Settings{
+			Callbacks: server.CallbacksStruct{
+				OnConnectingFunc: func(request *http.Request) serverTypes.ConnectionResponse {
+					return serverTypes.ConnectionResponse{
+						Accept: true,
+						ConnectionCallbacks: server.ConnectionCallbacksStruct{
+							OnMessageFunc: func(conn serverTypes.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
+								s.logger.Debug("Received message")
+								if message.AgentDescription != nil {
+									s.agentDescription = message.AgentDescription
+									identAttr := s.agentDescription.IdentifyingAttributes
+
+									for _, attr := range identAttr {
+										switch attr.Key {
+										case semconv.AttributeServiceName:
+											s.agentName = attr.Value.GetStringValue()
+										case semconv.AttributeServiceVersion:
+											s.agentVersion = attr.Value.GetStringValue()
+										}
+									}
+
+									done <- struct{}{}
+								}
+
+								return &protobufs.ServerToAgent{}
+							},
+						},
+					}
+				},
+			},
+		},
+		ListenEndpoint: fmt.Sprintf("localhost:%d", supervisorPort),
+	})
+
+	tmpCmd, err := commander.NewCommander(
+		s.logger,
+		s.config.Agent,
+		"--config", s.effectiveConfigFilePath,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	tmpCmd.Start(context.Background())
+
+	select {
+	case <-time.After(3 * time.Second):
+		return errors.New("failed to bootstrap Collector")
+	case <-done:
+	}
+
+	err = tmpCmd.Stop(context.Background())
+
+	if err != nil {
+		return err
+	}
+
+	err = srv.Stop(context.Background())
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -252,7 +372,7 @@ func (s *Supervisor) startOpAMP() error {
 		},
 		Capabilities: s.Capabilities(),
 	}
-	err = s.opampClient.SetAgentDescription(s.createAgentDescription())
+	err = s.opampClient.SetAgentDescription(s.agentDescription)
 	if err != nil {
 		return err
 	}
@@ -270,6 +390,50 @@ func (s *Supervisor) startOpAMP() error {
 	}
 
 	s.logger.Debug("OpAMP Client started.")
+
+	err = s.startOpAMPServer()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Supervisor) startOpAMPServer() error {
+	s.opampServer = server.New(s.logger.Sugar())
+
+	var err error
+	s.opampServerPort, err = s.findRandomPort()
+	if err != nil {
+		return err
+	}
+
+	s.opampServer.Start(server.StartSettings{
+		Settings: server.Settings{
+			Callbacks: server.CallbacksStruct{
+				OnConnectingFunc: func(request *http.Request) serverTypes.ConnectionResponse {
+					return serverTypes.ConnectionResponse{
+						Accept: true,
+						ConnectionCallbacks: server.ConnectionCallbacksStruct{
+							OnMessageFunc: func(conn serverTypes.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
+								s.logger.Debug("Received message")
+								if message.AgentDescription != nil {
+									s.agentDescription = message.AgentDescription
+								}
+								if message.EffectiveConfig != nil {
+									s.logger.Debug("Setting confmap")
+									s.effectiveConfig.Store(string(message.EffectiveConfig.ConfigMap.ConfigMap[""].Body))
+								}
+
+								return &protobufs.ServerToAgent{}
+							},
+						},
+					}
+				},
+			},
+		},
+		ListenEndpoint: fmt.Sprintf("localhost:%d", s.opampServerPort),
+	})
 
 	return nil
 }
@@ -301,7 +465,7 @@ func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
 
 	return &protobufs.AgentDescription{
 		IdentifyingAttributes: []*protobufs.KeyValue{
-			keyVal("service.name", agentType),
+			keyVal("service.name", s.agentName),
 			keyVal("service.version", s.agentVersion),
 			keyVal("service.instance.id", s.instanceID.String()),
 		},
@@ -327,16 +491,25 @@ service:
       service.instance.id: %s
 
   # Enable extension to allow the Supervisor to check health.
-  extensions: [health_check]
+  extensions: [health_check, opamp]
 
 extensions:
   health_check:
     endpoint: %s
+  opamp:
+    instance_uid: %s
+    server:
+      ws:
+        endpoint: "ws://localhost:%d/v1/opamp"
+        tls:
+          insecure: true
 `,
-		agentType,
+		s.agentName,
 		s.agentVersion,
 		s.instanceID.String(),
 		s.agentHealthCheckEndpoint,
+		s.instanceID.String(),
+		s.opampServerPort,
 	)
 }
 
@@ -693,6 +866,14 @@ func (s *Supervisor) Shutdown() {
 			s.logger.Error("Could not stop the OpAMP client", zap.Error(err))
 		}
 	}
+
+	if s.opampServer != nil {
+		err := s.opampServer.Stop(context.Background())
+
+		if err != nil {
+			s.logger.Error("Could not stop the OpAMP server", zap.Error(err))
+		}
+	}
 }
 
 func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
@@ -737,7 +918,7 @@ func (s *Supervisor) onMessage(ctx context.Context, msg *types.MessageData) {
 			zap.String("old_id", s.instanceID.String()),
 			zap.String("new_id", newInstanceID.String()))
 		s.instanceID = newInstanceID
-		err = s.opampClient.SetAgentDescription(s.createAgentDescription())
+		err = s.opampClient.SetAgentDescription(s.agentDescription)
 		if err != nil {
 			s.logger.Error("Failed to send agent description to OpAMP server")
 		}
