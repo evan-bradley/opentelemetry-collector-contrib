@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"runtime"
 	"sort"
 	"sync/atomic"
 	"time"
@@ -416,12 +415,10 @@ func (s *Supervisor) startOpAMPServer() error {
 						Accept: true,
 						ConnectionCallbacks: server.ConnectionCallbacksStruct{
 							OnMessageFunc: func(conn serverTypes.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
-								s.logger.Debug("Received message")
 								if message.AgentDescription != nil {
 									s.agentDescription = message.AgentDescription
 								}
 								if message.EffectiveConfig != nil {
-									s.logger.Debug("Setting confmap")
 									s.effectiveConfig.Store(string(message.EffectiveConfig.ConfigMap.ConfigMap[""].Body))
 								}
 
@@ -449,31 +446,6 @@ func (s *Supervisor) createInstanceID() (ulid.ULID, error) {
 
 	return id, nil
 
-}
-
-func keyVal(key, val string) *protobufs.KeyValue {
-	return &protobufs.KeyValue{
-		Key: key,
-		Value: &protobufs.AnyValue{
-			Value: &protobufs.AnyValue_StringValue{StringValue: val},
-		},
-	}
-}
-
-func (s *Supervisor) createAgentDescription() *protobufs.AgentDescription {
-	hostname, _ := os.Hostname()
-
-	return &protobufs.AgentDescription{
-		IdentifyingAttributes: []*protobufs.KeyValue{
-			keyVal("service.name", s.agentName),
-			keyVal("service.version", s.agentVersion),
-			keyVal("service.instance.id", s.instanceID.String()),
-		},
-		NonIdentifyingAttributes: []*protobufs.KeyValue{
-			keyVal("os.family", runtime.GOOS),
-			keyVal("host.name", hostname),
-		},
-	}
 }
 
 func (s *Supervisor) composeExtraLocalConfig() string {
