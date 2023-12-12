@@ -39,10 +39,13 @@ import (
 
 var (
 	//go:embed templates/bootstrap.yaml
-	bootstrapConfTempl string
+	bootstrapConfTpl string
 
 	//go:embed templates/extraconfig.yaml
-	extraConfigTempl string
+	extraConfigTpl string
+
+	//go:embed templates/owntelemetry.yaml
+	ownTelemetryTpl string
 )
 
 // Supervisor implements supervising of OpenTelemetry Collector and uses OpAMPClient
@@ -72,6 +75,10 @@ type Supervisor struct {
 
 	// The version of the agent.
 	agentVersion string
+
+	bootstrapTemplate    *template.Template
+	extraConfigTemplate  *template.Template
+	ownTelemetryTemplate *template.Template
 
 	// A config section to be added to the Collector's config to fetch its own metrics.
 	// TODO: store this persistently so that when starting we can compose the effective
@@ -117,6 +124,10 @@ func NewSupervisor(logger *zap.Logger, configFile string) (*Supervisor, error) {
 		effectiveConfig:              &atomic.Value{},
 	}
 
+	if err := s.createTemplates(); err != nil {
+		return nil, err
+	}
+
 	if err := s.loadConfig(configFile); err != nil {
 		return nil, fmt.Errorf("error loading config: %w", err)
 	}
@@ -130,7 +141,7 @@ func NewSupervisor(logger *zap.Logger, configFile string) (*Supervisor, error) {
 	s.instanceID = id
 
 	if err := s.getBootstrapInfo(); err != nil {
-		s.logger.Error("Couldn't get agent version", zap.Error(err))
+		return nil, fmt.Errorf("could not get bootstrap info from the Collector: %w", err)
 	}
 
 	port, err := s.findRandomPort()
@@ -163,6 +174,26 @@ func NewSupervisor(logger *zap.Logger, configFile string) (*Supervisor, error) {
 	go s.runAgentProcess()
 
 	return s, nil
+}
+
+func (s *Supervisor) createTemplates() error {
+	var err error
+	s.bootstrapTemplate, err = template.New("bootstrap").Parse(bootstrapConfTpl)
+	if err != nil {
+		return err
+	}
+
+	s.extraConfigTemplate, err = template.New("bootstrap").Parse(extraConfigTpl)
+	if err != nil {
+		return err
+	}
+
+	s.ownTelemetryTemplate, err = template.New("bootstrap").Parse(ownTelemetryTpl)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Supervisor) loadConfig(configFile string) error {
@@ -201,14 +232,7 @@ func (s *Supervisor) getBootstrapInfo() (err error) {
 
 	var cfg bytes.Buffer
 
-	cfgTp := template.New("bootstrap")
-	cfgTp, err = cfgTp.Parse(bootstrapConfTempl)
-
-	if err != nil {
-		return err
-	}
-
-	cfgTp.Execute(&cfg, map[string]any{
+	s.bootstrapTemplate.Execute(&cfg, map[string]any{
 		"EndpointPort":   port,
 		"InstanceUid":    s.instanceID.String(),
 		"SupervisorPort": supervisorPort,
@@ -219,11 +243,13 @@ func (s *Supervisor) getBootstrapInfo() (err error) {
 	srv := server.New(s.logger.Sugar())
 
 	done := make(chan struct{}, 1)
+	var connected bool
 
 	srv.Start(server.StartSettings{
 		Settings: server.Settings{
 			Callbacks: server.CallbacksStruct{
 				OnConnectingFunc: func(request *http.Request) serverTypes.ConnectionResponse {
+					connected = true
 					return serverTypes.ConnectionResponse{
 						Accept: true,
 						ConnectionCallbacks: server.ConnectionCallbacksStruct{
@@ -254,7 +280,7 @@ func (s *Supervisor) getBootstrapInfo() (err error) {
 		ListenEndpoint: fmt.Sprintf("localhost:%d", supervisorPort),
 	})
 
-	tmpCmd, err := commander.NewCommander(
+	cmd, err := commander.NewCommander(
 		s.logger,
 		s.config.Agent,
 		"--config", s.effectiveConfigFilePath,
@@ -264,15 +290,19 @@ func (s *Supervisor) getBootstrapInfo() (err error) {
 		return err
 	}
 
-	tmpCmd.Start(context.Background())
+	cmd.Start(context.Background())
 
 	select {
 	case <-time.After(3 * time.Second):
-		return errors.New("failed to bootstrap Collector")
+		if connected {
+			return errors.New("collector connected but never responded with an AgentDescription message")
+		} else {
+			return errors.New("collector's OpAMP client never connected to the Supervisor")
+		}
 	case <-done:
 	}
 
-	err = tmpCmd.Stop(context.Background())
+	err = cmd.Stop(context.Background())
 
 	if err != nil {
 		return err
@@ -384,10 +414,14 @@ func (s *Supervisor) startOpAMP() error {
 
 	s.logger.Debug("OpAMP Client started.")
 
+	s.logger.Debug("Starting OpAMP server...")
+
 	err = s.startOpAMPServer()
 	if err != nil {
 		return err
 	}
+
+	s.logger.Debug("OpAMP server started.")
 
 	return nil
 }
@@ -442,41 +476,24 @@ func (s *Supervisor) createInstanceID() (ulid.ULID, error) {
 
 }
 
-func (s *Supervisor) composeExtraLocalConfig() string {
-	return fmt.Sprintf(`
-service:
-  telemetry:
-    logs:
-      # Enables JSON log output for the Agent.
-      encoding: json
-    resource:
-      # Set resource attributes required by OpAMP spec.
-      # See https://github.com/open-telemetry/opamp-spec/blob/main/specification.md#agentdescriptionidentifying_attributes
-      service.name: %s
-      service.version: %s
-      service.instance.id: %s
-
-  # Enable extension to allow the Supervisor to check health.
-  extensions: [health_check, opamp]
-
-extensions:
-  health_check:
-    endpoint: %s
-  opamp:
-    instance_uid: %s
-    server:
-      ws:
-        endpoint: "ws://localhost:%d/v1/opamp"
-        tls:
-          insecure: true
-`,
-		s.agentName,
-		s.agentVersion,
-		s.instanceID.String(),
-		s.agentHealthCheckEndpoint,
-		s.instanceID.String(),
-		s.opampServerPort,
+func (s *Supervisor) composeExtraLocalConfig() []byte {
+	var cfg bytes.Buffer
+	err := s.extraConfigTemplate.Execute(
+		&cfg,
+		map[string]any{
+			"ServiceName":    s.agentName,
+			"ServiceVersion": s.agentVersion,
+			"InstanceId":     s.instanceID.String(),
+			"Healthcheck":    s.agentHealthCheckEndpoint,
+			"SupervisorPort": s.opampServerPort,
+		},
 	)
+	if err != nil {
+		s.logger.Error("Could not compose local config", zap.Error(err))
+		return nil
+	}
+
+	return cfg.Bytes()
 }
 
 func (s *Supervisor) loadAgentEffectiveConfig() {
@@ -488,7 +505,7 @@ func (s *Supervisor) loadAgentEffectiveConfig() {
 		effectiveConfigBytes = effFromFile
 	} else {
 		// No effective config file, just use the initial config.
-		effectiveConfigBytes = []byte(s.composeExtraLocalConfig())
+		effectiveConfigBytes = s.composeExtraLocalConfig()
 	}
 
 	s.effectiveConfig.Store(string(effectiveConfigBytes))
@@ -514,11 +531,10 @@ func (s *Supervisor) createEffectiveConfigMsg() *protobufs.EffectiveConfig {
 }
 
 func (s *Supervisor) setupOwnMetrics(_ context.Context, settings *protobufs.TelemetryConnectionSettings) (configChanged bool) {
-	var cfg string
+	var cfg bytes.Buffer
 	if settings.DestinationEndpoint == "" {
 		// No destination. Disable metric collection.
 		s.logger.Debug("Disabling own metrics pipeline in the config")
-		cfg = ""
 	} else {
 		s.logger.Debug("Enabling own metrics pipeline in the config")
 
@@ -529,37 +545,20 @@ func (s *Supervisor) setupOwnMetrics(_ context.Context, settings *protobufs.Tele
 			return
 		}
 
-		cfg = fmt.Sprintf(
-			`
-receivers:
-  # Collect own metrics
-  prometheus/own_metrics:
-    config:
-      scrape_configs:
-        - job_name: 'otel-collector'
-          scrape_interval: 10s
-          static_configs:
-            - targets: ['0.0.0.0:%d']  
-exporters:
-  otlphttp/own_metrics:
-    metrics_endpoint: %s
-
-service:
-  telemetry:
-    metrics:
-      address: :%d
-  pipelines:
-    metrics/own_metrics:
-      receivers: [prometheus/own_metrics]
-      exporters: [otlphttp/own_metrics]
-`,
-			port,
-			settings.DestinationEndpoint,
-			port,
+		err = s.ownTelemetryTemplate.Execute(
+			&cfg,
+			map[string]any{
+				"PrometheusPort":  port,
+				"MetricsEndpoint": settings.DestinationEndpoint,
+			},
 		)
-	}
+		if err != nil {
+			s.logger.Error("Could not setup own metrics", zap.Error(err))
+			return
+		}
 
-	s.agentConfigOwnMetricsSection.Store(cfg)
+	}
+	s.agentConfigOwnMetricsSection.Store(cfg.String())
 
 	// Need to recalculate the Agent config so that the metric config is included in it.
 	configChanged, err := s.recalcEffectiveConfig()
@@ -620,7 +619,7 @@ func (s *Supervisor) composeEffectiveConfig(config *protobufs.AgentRemoteConfig)
 	}
 
 	// Merge local config last since it has the highest precedence.
-	if err = k.Load(rawbytes.Provider([]byte(s.composeExtraLocalConfig())), yaml.Parser()); err != nil {
+	if err = k.Load(rawbytes.Provider(s.composeExtraLocalConfig()), yaml.Parser()); err != nil {
 		return false, err
 	}
 
