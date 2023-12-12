@@ -4,7 +4,9 @@
 package supervisor
 
 import (
+	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -13,6 +15,7 @@ import (
 	"os"
 	"sort"
 	"sync/atomic"
+	"text/template"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -32,6 +35,14 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/commander"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/config"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/cmd/opampsupervisor/supervisor/healthchecker"
+)
+
+var (
+	//go:embed templates/bootstrap.yaml
+	bootstrapConfTempl string
+
+	//go:embed templates/extraconfig.yaml
+	extraConfigTempl string
 )
 
 // Supervisor implements supervising of OpenTelemetry Collector and uses OpAMPClient
@@ -188,38 +199,22 @@ func (s *Supervisor) getBootstrapInfo() (err error) {
 		return err
 	}
 
-	cfg := fmt.Sprintf(`
-receivers:
-  otlp:
-    protocols:
-      http:
-        endpoint: "localhost:%d"
-exporters:
-  debug:
-    verbosity: basic
+	var cfg bytes.Buffer
 
-extensions:
-  opamp:
-    instance_uid: %s
-    server:
-      ws:
-        endpoint: "ws://localhost:%d/v1/opamp"
-        tls:
-          insecure: true
+	cfgTp := template.New("bootstrap")
+	cfgTp, err = cfgTp.Parse(bootstrapConfTempl)
 
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      exporters: [debug]
-  extensions: [opamp]
-`,
-		port,
-		s.instanceID.String(),
-		supervisorPort,
-	)
+	if err != nil {
+		return err
+	}
 
-	s.writeEffectiveConfigToFile(cfg, s.effectiveConfigFilePath)
+	cfgTp.Execute(&cfg, map[string]any{
+		"EndpointPort":   port,
+		"InstanceUid":    s.instanceID.String(),
+		"SupervisorPort": supervisorPort,
+	})
+
+	s.writeEffectiveConfigToFile(cfg.String(), s.effectiveConfigFilePath)
 
 	srv := server.New(s.logger.Sugar())
 
@@ -233,7 +228,6 @@ service:
 						Accept: true,
 						ConnectionCallbacks: server.ConnectionCallbacksStruct{
 							OnMessageFunc: func(conn serverTypes.Connection, message *protobufs.AgentToServer) *protobufs.ServerToAgent {
-								s.logger.Debug("Received message")
 								if message.AgentDescription != nil {
 									s.agentDescription = message.AgentDescription
 									identAttr := s.agentDescription.IdentifyingAttributes

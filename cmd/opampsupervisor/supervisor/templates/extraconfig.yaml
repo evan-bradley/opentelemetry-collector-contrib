@@ -1,0 +1,25 @@
+service:
+  telemetry:
+    logs:
+      # Enables JSON log output for the Agent.
+      encoding: json
+    resource:
+      # Set resource attributes required by OpAMP spec.
+      # See https://github.com/open-telemetry/opamp-spec/blob/main/specification.md#agentdescriptionidentifying_attributes
+      service.name: "{{.ServiceName}}"
+      service.version: "{{.ServiceVersion}}"
+      service.instance.id: "{{.InstanceId}}"
+
+  # Enable extension to allow the Supervisor to check health.
+  extensions: [health_check, opamp]
+
+extensions:
+  health_check:
+    endpoint: "{{.Healthcheck}}"
+  opamp:
+    instance_uid: "{{.InstanceId}}"
+    server:
+      ws:
+        endpoint: "ws://localhost:{{.SupervisorPort}}/v1/opamp"
+        tls:
+          insecure: true
