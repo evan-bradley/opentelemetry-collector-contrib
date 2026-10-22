@@ -303,6 +303,102 @@ func Test_e2e_converters(t *testing.T) {
 			},
 		},
 		{
+			statement: `set(attributes["all"], Append([["a"], ["b", "c"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				all := tCtx.GetLogRecord().Attributes().PutEmptySlice("all")
+				all.AppendEmpty().SetStr("a")
+				all.AppendEmpty().SetStr("b")
+				all.AppendEmpty().SetStr("c")
+			},
+		},
+		{
+			statement: `set(attributes["all"], Append([attributes["array"], ["prod"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				attrs := tCtx.GetLogRecord().Attributes()
+				array, _ := attrs.Get("array")
+				all := attrs.PutEmptySlice("all")
+				array.Slice().CopyTo(all)
+				all.AppendEmpty().SetStr("prod")
+			},
+		},
+		{
+			statement: `set(attributes["all"], Append([attributes["array"], attributes["primitiveValuesSlice"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				attrs := tCtx.GetLogRecord().Attributes()
+				array, _ := attrs.Get("array")
+				primitives, _ := attrs.Get("primitiveValuesSlice")
+				all := attrs.PutEmptySlice("all")
+				array.Slice().CopyTo(all)
+				for _, v := range primitives.Slice().All() {
+					v.CopyTo(all.AppendEmpty())
+				}
+			},
+		},
+		{
+			statement: `set(attributes["all"], Append([Split(attributes["flags"], "|"), attributes["array"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				attrs := tCtx.GetLogRecord().Attributes()
+				array, _ := attrs.Get("array")
+				all := attrs.PutEmptySlice("all")
+				for _, part := range []string{"A", "B", "C"} {
+					all.AppendEmpty().SetStr(part)
+				}
+				for _, v := range array.Slice().All() {
+					v.CopyTo(all.AppendEmpty())
+				}
+			},
+		},
+		{
+			statement: `set(attributes["array"], Append([attributes["array"], ["x"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				array, _ := tCtx.GetLogRecord().Attributes().Get("array")
+				array.Slice().AppendEmpty().SetStr("x")
+			},
+		},
+		{
+			statement: `set(attributes["all_things"], Append([attributes["things"], attributes["things"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				attrs := tCtx.GetLogRecord().Attributes()
+				things, _ := attrs.Get("things")
+				all := attrs.PutEmptySlice("all_things")
+				for range 2 {
+					for _, thing := range things.Slice().All() {
+						thing.CopyTo(all.AppendEmpty())
+					}
+				}
+			},
+		},
+		{
+			statement: `set(attributes["all_things"], Append([[{"a": "1"}], attributes["things"]]))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				attrs := tCtx.GetLogRecord().Attributes()
+				things, _ := attrs.Get("things")
+				all := attrs.PutEmptySlice("all_things")
+				all.AppendEmpty().SetEmptyMap().PutStr("a", "1")
+				for _, thing := range things.Slice().All() {
+					thing.CopyTo(all.AppendEmpty())
+				}
+			},
+		},
+		{
+			statement: `set(attributes["groups"], MapEach([["a"], ["b", "c"]], (_, v) => Append([v, ["default"]])))`,
+			want: func(tCtx *ottllog.TransformContext) {
+				groups := tCtx.GetLogRecord().Attributes().PutEmptySlice("groups")
+				first := groups.AppendEmpty().SetEmptySlice()
+				first.AppendEmpty().SetStr("a")
+				first.AppendEmpty().SetStr("default")
+				second := groups.AppendEmpty().SetEmptySlice()
+				second.AppendEmpty().SetStr("b")
+				second.AppendEmpty().SetStr("c")
+				second.AppendEmpty().SetStr("default")
+			},
+		},
+		{
+			statement: `set(attributes["all"], Append([attributes["array"], attributes["flags"]]))`,
+			errMsg:    "expected pcommon.Slice",
+			want:      func(*ottllog.TransformContext) {},
+		},
+		{
 			statement: `set(attributes["test"], When(() => attributes["int_value"] > 0, "positive", "negative"))`,
 			want: func(tCtx *ottllog.TransformContext) {
 				tCtx.GetLogRecord().Attributes().PutStr("test", "negative")

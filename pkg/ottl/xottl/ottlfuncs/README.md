@@ -14,6 +14,7 @@ Available Converters:
   - [Converters](#converters)
     - [All](#all)
     - [Any](#any)
+    - [Append](#append)
     - [Filter](#filter)
     - [Find](#find)
     - [MapEach](#mapeach)
@@ -89,6 +90,39 @@ Check whether any map key matches:
 Use in a condition:
 
 - `set(log.attributes["has_prod"], true) where Any(log.attributes["tags"], (_, v) => v == "prod")`
+
+### Append
+
+> [!IMPORTANT]
+> This function is experimental and may change in future releases. It requires the [`pkg.ottl.functions.enableExperimental`](../../documentation.md#feature-gates) feature gate to be enabled.
+
+`Append(slices)`
+
+The `Append` converter joins a list of slices into a new `pcommon.Slice`. None of the input slices are modified, and the result does not share data with them.
+
+`Append` is the slice analogue of [`Concat`](../../ottlfuncs/README.md#concat), and is intended for use when joining slices is a composition step inside a larger expression (for example within a lambda or as an argument to another function), as opposed to being a step itself. To append values to a field in place as its own statement, use the [`append`](../../ottlfuncs/README.md#append) editor.
+
+`slices` is a list of slices, or a path expression or another getter that resolves to a list of slices. Each element must be a slice, otherwise it returns an error. A single value must be written as a one-element list, for example `["prod"]`. An empty list produces an empty slice.
+
+The elements of the slices are added to the result from left to right, in their original order. The join is shallow: a nested slice is an ordinary element and is not flattened, so `Append([[1, [2]], [3]])` returns `[1, [2], 3]`.
+
+Examples:
+
+Add a value to a slice:
+
+- `Append([log.attributes["tags"], ["prod"]])`
+
+Join the output of another converter with a slice:
+
+- `Append([Split(log.attributes["csv_tags"], ","), log.attributes["tags"]])`
+
+Append inside a lambda (also requires the [`ottl.functions.enableLambda`](../../documentation.md#feature-gates) feature gate):
+
+- `MapEach(log.attributes["tag_groups"], (_, v) => Append([v, ["default"]]))`
+
+Store the joined result:
+
+- `set(log.attributes["all_tags"], Append([resource.attributes["tags"], log.attributes["tags"]]))`
 
 ### Filter
 

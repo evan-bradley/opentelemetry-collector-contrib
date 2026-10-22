@@ -11,10 +11,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/featuregate"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/testutil"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl/xottl"
 )
@@ -178,20 +176,6 @@ func Test_merge(t *testing.T) {
 			}
 		})
 	}
-}
-
-// setProtoPoolingForTest sets pdata's pdata.useProtoPooling feature gate for the duration of the test.
-// pdata does not export the gate, so it is looked up by ID.
-func setProtoPoolingForTest(t *testing.T, enabled bool) {
-	t.Helper()
-	var gate *featuregate.Gate
-	featuregate.GlobalRegistry().VisitAll(func(g *featuregate.Gate) {
-		if g.ID() == "pdata.useProtoPooling" {
-			gate = g
-		}
-	})
-	require.NotNil(t, gate, "pdata.useProtoPooling feature gate is not registered")
-	t.Cleanup(testutil.SetFeatureGateForTest(t, gate, enabled))
 }
 
 func Test_merge_resolver_receives_key(t *testing.T) {

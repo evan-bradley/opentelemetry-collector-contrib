@@ -14,6 +14,7 @@ func ExperimentalConverters[K any]() []ottl.Factory[K] {
 	return []ottl.Factory[K]{
 		NewAllFactory[K](),
 		NewAnyFactory[K](),
+		NewAppendFactory[K](),
 		NewFilterFactory[K](),
 		NewFindFactory[K](),
 		NewMapEachFactory[K](),
